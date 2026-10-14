@@ -1,0 +1,26 @@
+// Test de fumée de l'éditeur dans Edge (Playwright) : node e2e-smoke.mjs <dossier-captures>
+import { chromium } from 'playwright-core';
+const out = process.argv[2] ?? '.';
+const browser = await chromium.launch({ channel: 'msedge' });
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+const errors = [];
+page.on('pageerror', (e) => errors.push(e.message));
+page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+await page.goto('http://localhost:1420');
+await page.getByText('Le château mystérieux').click();
+await page.waitForTimeout(800);
+await page.screenshot({ path: `${out}/1-chateau.png` });
+await page.getByText('▶ Jouer mon histoire').click();
+await page.waitForTimeout(300);
+await page.getByText('⏭ Suivant').click();
+await page.getByRole('button', { name: /Entrer dans le château/ }).click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${out}/2-play.png` });
+const text = await page.locator('.play-card h2').innerText();
+console.log('Carte affichée :', text);
+await page.getByText('⏹ Arrêter').first().click();
+await page.locator('.react-flow__node').filter({ hasText: 'Où aller' }).click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${out}/3-inspector.png` });
+console.log('Erreurs :', errors.length ? errors : 'aucune');
+await browser.close();

@@ -1,0 +1,28 @@
+{
+  "name": "Retour avec réinitialisation, fin implicite, boucle infinie, entrées invalides",
+  "story": {
+    "format": "herodio-story", "version": 1, "id": "t4", "title": "T4",
+    "start": "s1", "items": [{ "id": "pomme", "name": "Pomme" }], "variables": [{ "id": "n", "name": "N", "initial": 5 }],
+    "nodes": [
+      { "id": "s1", "type": "scene", "text": "Départ", "audio": null, "next": "g1" },
+      { "id": "g1", "type": "item", "op": "give", "item": "pomme", "next": "g2" },
+      { "id": "g2", "type": "item", "op": "give", "item": "pomme", "next": "v1" },
+      { "id": "v1", "type": "var", "op": "set", "var": "n", "value": 9, "next": "c1" },
+      { "id": "c1", "type": "choice", "text": "?", "audio": null, "options": [
+        { "text": "Recommencer à zéro", "audio": null, "next": "j1" },
+        { "text": "Impasse", "audio": null, "next": "sDead" },
+        { "text": "Piège", "audio": null, "next": "kLoop" },
+        { "text": "Nulle part", "audio": null, "next": null }
+      ] },
+      { "id": "j1", "type": "jump", "target": "k0", "reset": true },
+      { "id": "k0", "type": "cond", "test": { "kind": "item", "item": "pomme" }, "then": "s1", "else": "sEmpty" },
+      { "id": "sEmpty", "type": "scene", "text": "Plus de pomme", "audio": null, "next": "s1" },
+      { "id": "sDead", "type": "scene", "text": "Rien après", "audio": null, "next": null },
+      { "id": "kLoop", "type": "cond", "test": { "kind": "var", "var": "inconnue", "op": "==", "value": 0 }, "then": "jLoop", "else": "s1" },
+      { "id": "jLoop", "type": "jump", "target": "kLoop", "reset": false }
+    ]
+  },
+  "inputs": ["next", "choose:7", "next", "choose:0", "next", "next", "choose:1", "next", "next", "restart", "next", "choose:2", "restart", "next", "choose:3"],
+  "trace": ["s1", "c1", "c1", "c1", "sEmpty", "s1", "c1", "sDead", "#end", "#end", "s1", "c1", "#error", "s1", "c1", "#end"],
+  "final": { "items": ["pomme"], "vars": { "n": 9 } }
+}

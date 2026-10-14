@@ -1,0 +1,19 @@
+{
+  "name": "Histoire linéaire avec un choix",
+  "story": {
+    "format": "herodio-story", "version": 1, "id": "t1", "title": "T1",
+    "start": "s1", "items": [], "variables": [],
+    "nodes": [
+      { "id": "s1", "type": "scene", "text": "Bonjour", "audio": null, "next": "c1" },
+      { "id": "c1", "type": "choice", "text": "Où aller ?", "audio": null, "options": [
+        { "text": "Gauche", "audio": null, "next": "e1" },
+        { "text": "Droite", "audio": null, "next": "e2" }
+      ] },
+      { "id": "e1", "type": "end", "kind": "happy", "text": "Fin 1", "audio": null },
+      { "id": "e2", "type": "end", "kind": "sad", "text": "Fin 2", "audio": null }
+    ]
+  },
+  "inputs": ["next", "choose:1", "restart", "next", "choose:0"],
+  "trace": ["s1", "c1", "e2", "s1", "c1", "e1"],
+  "final": { "items": [], "vars": {} }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "Clé, porte verrouillée et retour",
+  "story": {
+    "format": "herodio-story", "version": 1, "id": "t2", "title": "T2",
+    "start": "s1", "items": [{ "id": "cle", "name": "Clé" }], "variables": [],
+    "nodes": [
+      { "id": "s1", "type": "scene", "text": "Un château", "audio": null, "next": "c1" },
+      { "id": "c1", "type": "choice", "text": "Que faire ?", "audio": null, "options": [
+        { "text": "La porte", "audio": null, "next": "k1" },
+        { "text": "La forêt", "audio": null, "next": "g1" }
+      ] },
+      { "id": "k1", "type": "cond", "test": { "kind": "item", "item": "cle" }, "then": "s_open", "else": "s_locked" },
+      { "id": "s_locked", "type": "scene", "text": "Fermée", "audio": null, "next": "j1" },
+      { "id": "j1", "type": "jump", "target": "c1", "reset": false },
+      { "id": "g1", "type": "item", "op": "give", "item": "cle", "next": "s_found" },
+      { "id": "s_found", "type": "scene", "text": "Une clé !", "audio": null, "next": "j1" },
+      { "id": "s_open", "type": "scene", "text": "Ouverte", "audio": null, "next": "t1" },
+      { "id": "t1", "type": "item", "op": "take", "item": "cle", "next": "e1" },
+      { "id": "e1", "type": "end", "kind": "happy", "text": "Bravo", "audio": null }
+    ]
+  },
+  "inputs": ["next", "choose:0", "next", "choose:1", "next", "choose:1", "next", "choose:0", "next"],
+  "trace": ["s1", "c1", "s_locked", "c1", "s_found", "c1", "s_found", "c1", "s_open", "e1"],
+  "final": { "items": [], "vars": {} }
+}
