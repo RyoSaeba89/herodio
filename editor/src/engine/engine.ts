@@ -143,6 +143,8 @@ export class Engine {
         case 'jump':
           if (n.reset) this.reset();
           id = n.target; break;
+        default:
+          steps = MAX_AUTO_STEPS; // type de bloc inconnu : erreur
       }
     }
     this.node = null;
