@@ -130,14 +130,14 @@ function Editor() {
         <input className="title-input" value={project.title} onFocus={() => useStore.getState().checkpoint()}
           onChange={(e) => useStore.getState().update((p) => { p.title = e.target.value; }, false)} aria-label="Titre de l’histoire" />
         <div className="tb-group">
-          <button className="btn ghost" onClick={() => setWelcome(true)} title="Nouvelle histoire ou exemple">✨ Nouveau</button>
-          <button className="btn ghost" onClick={() => openProject().then((n) => n && setStatus('Ouvert : ' + n)).catch((e) => setStatus('Erreur : ' + e.message))}>📂 Ouvrir</button>
-          <button className="btn ghost" onClick={save} title="Ctrl+S">💾 Enregistrer</button>
+          <button className="btn ghost" onClick={() => setWelcome(true)} title="Nouvelle histoire ou exemple">✨<span className="tb-label"> Nouveau</span></button>
+          <button className="btn ghost" title="Ouvrir une histoire" onClick={() => openProject().then((n) => n && setStatus('Ouvert : ' + n)).catch((e) => setStatus('Erreur : ' + e.message))}>📂<span className="tb-label"> Ouvrir</span></button>
+          <button className="btn ghost" onClick={save} title="Enregistrer (Ctrl+S)">💾<span className="tb-label"> Enregistrer</span></button>
         </div>
         <div className="tb-group">
           <button className="btn ghost" onClick={() => useStore.getState().undo()} disabled={!past} title="Annuler (Ctrl+Z)">↶</button>
           <button className="btn ghost" onClick={() => useStore.getState().redo()} disabled={!future} title="Rétablir (Ctrl+Y)">↷</button>
-          <button className="btn ghost" onClick={() => { applyAutoLayout(); setTimeout(() => fitView({ duration: 300, maxZoom: 1 }), 50); }} title="Ranger les blocs automatiquement">🧹 Ranger</button>
+          <button className="btn ghost" onClick={() => { applyAutoLayout(); setTimeout(() => fitView({ duration: 300, maxZoom: 1 }), 50); }} title="Ranger les blocs automatiquement">🧹<span className="tb-label"> Ranger</span></button>
         </div>
         <div className="mode-switch" role="group" aria-label="Niveau">
           <button className={!advanced ? 'on' : ''} onClick={() => useStore.getState().update((p) => { p.level = 'decouverte'; })}>🌱 Découverte</button>

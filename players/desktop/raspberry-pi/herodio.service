@@ -1,0 +1,19 @@
+# Démarrage automatique du lecteur Herodio en mode console (Raspberry Pi OS Lite, sans bureau).
+# Installation : voir docs/lecteurs.md
+[Unit]
+Description=Lecteur d'histoires Herodio
+After=sound.target
+
+[Service]
+User=pi
+Environment=HERODIO_HISTOIRES=/home/pi/Herodio/histoires
+ExecStart=/usr/local/bin/herodio-player --console
+StandardInput=tty
+StandardOutput=tty
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVTDisallocate=yes
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,5 @@
+# Démarrage automatique avec le bureau : copier dans ~/.config/autostart/
+[Desktop Entry]
+Type=Application
+Name=Herodio
+Exec=/usr/local/bin/herodio-player --fullscreen

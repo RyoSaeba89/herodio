@@ -25,8 +25,8 @@ pub struct App {
 impl App {
     pub fn new(cc: &eframe::CreationContext, open: Option<PathBuf>, fullscreen: bool) -> App {
         let ctx = &cc.egui_ctx;
-        ctx.set_visuals(egui::Visuals::light());
-        ctx.global_style_mut(|s| {
+        ctx.set_theme(egui::Theme::Light);
+        ctx.all_styles_mut(|s| {
             s.text_styles.insert(TextStyle::Heading, FontId::proportional(36.0));
             s.text_styles.insert(TextStyle::Body, FontId::proportional(24.0));
             s.text_styles.insert(TextStyle::Button, FontId::proportional(24.0));
