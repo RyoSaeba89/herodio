@@ -56,6 +56,9 @@ export function validate(p: Project): Issue[] {
       else if (t.kind === 'visited' && !byId.has(t.node)) err('La condition parle d’un bloc qui n’existe plus.', b.id);
     }
 
+    const img = 'image' in b ? b.image : null;
+    if (img && !mediaIds.has(img)) err('L’illustration de ce bloc est introuvable.', b.id);
+
     // Sons
     for (const slot of soundSlots(b)) {
       const missing = slot.sound?.tracks.some((t) => t.clips.some((c) => !mediaIds.has(c.media)));

@@ -14,9 +14,9 @@ export interface Option { text: string; audio?: string | null; next: string | nu
 export type EndKind = 'happy' | 'sad' | 'secret' | 'other';
 
 export type RNode =
-  | { id: string; type: 'scene'; title?: string; text?: string; audio?: string | null; next: string | null }
-  | { id: string; type: 'choice'; title?: string; text?: string; audio?: string | null; options: Option[] }
-  | { id: string; type: 'end'; kind: EndKind; title?: string; text?: string; audio?: string | null }
+  | { id: string; type: 'scene'; title?: string; text?: string; audio?: string | null; image?: string | null; next: string | null }
+  | { id: string; type: 'choice'; title?: string; text?: string; audio?: string | null; image?: string | null; options: Option[] }
+  | { id: string; type: 'end'; kind: EndKind; title?: string; text?: string; audio?: string | null; image?: string | null }
   | { id: string; type: 'item'; op: 'give' | 'take'; item: string; next: string | null }
   | { id: string; type: 'var'; op: 'set' | 'add'; var: string; value: number; next: string | null }
   | { id: string; type: 'cond'; test: Test; then: string | null; else: string | null }
@@ -29,6 +29,9 @@ export interface Story {
   title: string;
   author?: string;
   description?: string;
+  /** Couverture (chemin d'image dans le pack) et couleur d'ambiance, pour l'affichage des lecteurs. */
+  cover?: string | null;
+  color?: string;
   start: string | null;
   items: { id: string; name: string }[];
   variables: { id: string; name: string; initial: number }[];

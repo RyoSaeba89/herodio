@@ -1,33 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { Engine } from '../engine/engine';
-import { chateauMysterieux, premiereHistoire } from '../examples';
+import { projectFromDef } from '../stories/build';
+import { chateau, premiere } from '../stories/exemples';
 import { compile } from './compile';
 import { newBlock, newProject, withPort, type Project } from './project';
 import { validate } from './validate';
 
+// Les exemples sont construits sans leurs médias : les tests de jouabilité complets sont dans stories.test.ts.
+const fake = () => ({ id: 'm', duration: 2 });
+const premiereHistoire = () => projectFromDef(premiere, fake);
+const chateauMysterieux = () => projectFromDef(chateau, fake);
 const errors = (p: Project) => validate(p).filter((i) => i.level === 'error');
-
-describe('exemples', () => {
-  it('sont valides et jouables jusqu’à chaque fin', () => {
-    for (const p of [premiereHistoire(), chateauMysterieux()]) {
-      expect(errors(p)).toEqual([]);
-      const story = compile(p);
-      const ends = new Set(story.nodes.filter((n) => n.type === 'end').map((n) => n.id));
-      // Exploration exhaustive des choix (profondeur bornée) : toutes les fins doivent être atteignables.
-      const reached = new Set<string>();
-      const explore = (path: number[], depth: number) => {
-        const e = new Engine(story);
-        e.start();
-        for (const c of path) { while (e.node?.type === 'scene') e.next(); e.choose(c); }
-        while (e.node?.type === 'scene') e.next();
-        if (e.status === 'end' && e.node) reached.add(e.node.id);
-        if (e.node?.type === 'choice' && depth < 8) e.node.options.forEach((_, i) => explore([...path, i], depth + 1));
-      };
-      explore([], 0);
-      expect(reached).toEqual(ends);
-    }
-  });
-});
 
 describe('validation', () => {
   it('signale le début manquant, les flèches manquantes et les blocs isolés', () => {

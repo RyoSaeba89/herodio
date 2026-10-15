@@ -2,9 +2,11 @@
 // Chaque son multipiste est mixé ici, une fois pour toutes : les lecteurs n'ont qu'un seul fichier à lire à la fois.
 import { strToU8, zipSync, type Zippable } from 'fflate';
 import { autoVoiceSlots, withAutoVoices } from '../audio/autovoice';
+import { rasterize } from '../audio/images';
+import { getBlob } from '../audio/media';
 import { encodeWav, renderSound } from '../audio/mixer';
 import { compile } from '../model/compile';
-import { hasAudio, soundDuration, soundSlots, type Project, type Sound } from '../model/project';
+import { blockImage, hasAudio, soundDuration, soundSlots, type Project, type Sound } from '../model/project';
 
 export interface Platform {
   id: 'windows' | 'rpi' | 'android' | 'android2' | 'cardputer';
@@ -15,14 +17,16 @@ export interface Platform {
   /** 'pack' = fichier .aistory ; 'sd' = archive à décompresser à la racine de la carte microSD. */
   output: 'pack' | 'sd';
   maxBytes?: number;
+  /** Taille des illustrations : `fit` = tenir dans le cadre, `cover` = remplir l'écran. */
+  image: { w: number; h: number; mode: 'fit' | 'cover' };
 }
 
 export const PLATFORMS: Platform[] = [
-  { id: 'windows', name: 'Windows', icon: '🪟', desc: 'Lecteur Herodio pour PC', sampleRate: 44100, output: 'pack' },
-  { id: 'android', name: 'Android', icon: '📱', desc: 'Téléphones et tablettes récents', sampleRate: 44100, output: 'pack' },
-  { id: 'rpi', name: 'Raspberry Pi', icon: '🍓', desc: 'Conteuse autonome', sampleRate: 44100, output: 'pack' },
-  { id: 'android2', name: 'Android 2.3', icon: '📟', desc: 'Anciens téléphones (Xperia Play…)', sampleRate: 22050, output: 'pack', maxBytes: 150e6 },
-  { id: 'cardputer', name: 'Cardputer ADV', icon: '⌨️', desc: 'M5Stack, carte microSD', sampleRate: 16000, output: 'sd', maxBytes: 2e9 },
+  { id: 'windows', name: 'Windows', icon: '🪟', desc: 'Lecteur Herodio pour PC', sampleRate: 44100, output: 'pack', image: { w: 1280, h: 960, mode: 'fit' } },
+  { id: 'android', name: 'Android', icon: '📱', desc: 'Téléphones et tablettes récents', sampleRate: 44100, output: 'pack', image: { w: 1280, h: 960, mode: 'fit' } },
+  { id: 'rpi', name: 'Raspberry Pi', icon: '🍓', desc: 'Conteuse autonome', sampleRate: 44100, output: 'pack', image: { w: 1024, h: 768, mode: 'fit' } },
+  { id: 'android2', name: 'Android 2.3', icon: '📟', desc: 'Anciens téléphones (Xperia Play…)', sampleRate: 22050, output: 'pack', maxBytes: 150e6, image: { w: 640, h: 480, mode: 'fit' } },
+  { id: 'cardputer', name: 'Cardputer ADV', icon: '⌨️', desc: 'M5Stack, carte microSD', sampleRate: 16000, output: 'sd', maxBytes: 2e9, image: { w: 240, h: 135, mode: 'cover' } },
 ];
 
 export const PACK_FORMAT_VERSION = 1;
@@ -39,15 +43,21 @@ function collect(p: Project) {
     if (!u) { u = { file: `assets/audio/${String(byJson.size + 1).padStart(3, '0')}.wav`, sound: s.sound }; byJson.set(k, u); }
     slotFile.set(s.key, u.file);
   }
-  return { unique: [...byJson.values()], slotFile };
+  // Illustrations (et couverture) : une seule fois chacune.
+  const images = new Map<string, string>();
+  for (const id of [p.cover, ...p.blocks.map(blockImage)]) {
+    if (id && getBlob(id) && !images.has(id)) images.set(id, `assets/images/${String(images.size + 1).padStart(3, '0')}.jpg`);
+  }
+  return { unique: [...byJson.values()], slotFile, images };
 }
 
 export function estimate(p: Project, pf: Platform) {
-  const { unique } = collect(p);
+  const { unique, images } = collect(p);
   // Voix automatique : environ 13 caractères lus par seconde.
   const auto = autoVoiceSlots(p);
   const seconds = unique.reduce((a, u) => a + soundDuration(u.sound), 0) + auto.reduce((a, s) => a + s.text.length / 13 + 0.3, 0);
-  return { seconds, bytes: seconds * pf.sampleRate * 2 + unique.length * 44 + 20000, files: unique.length + auto.length };
+  const imageBytes = images.size * (pf.image.w * pf.image.h * 0.25);
+  return { seconds, bytes: seconds * pf.sampleRate * 2 + unique.length * 44 + 20000 + imageBytes, files: unique.length + auto.length, images: images.size };
 }
 
 export function slug(s: string) {
@@ -72,13 +82,16 @@ export const mb = (b: number) => `${(b / 1e6).toFixed(b < 1e7 ? 1 : 0).replace('
 
 export async function buildPack(p: Project, pf: Platform, progress: (done: number, total: number, step?: string) => void): Promise<{ name: string; bytes: Uint8Array }> {
   if (p.autoVoice) p = await withAutoVoices(p, (d, t) => progress(d, t, 'voix'));
-  const { unique, slotFile } = collect(p);
-  const story = compile(p, (key) => slotFile.get(key) ?? null);
+  const { unique, slotFile, images } = collect(p);
+  const story = compile(p, (key) => slotFile.get(key) ?? null, (m) => (m && images.get(m)) || null);
   const metadata = {
     format: 'herodio-pack', version: PACK_FORMAT_VERSION,
     id: p.id, title: p.title, author: p.author, description: p.description,
     platform: pf.id, audio: { codec: 'pcm_s16le', channels: 1, sampleRate: pf.sampleRate },
     files: unique.length,
+    images: images.size,
+    cover: p.cover ? images.get(p.cover) ?? null : null,
+    color: p.color,
     duration: Math.round(unique.reduce((a, u) => a + soundDuration(u.sound), 0)),
     created: new Date().toISOString(), generator: 'Herodio Studio',
   };
@@ -87,6 +100,9 @@ export async function buildPack(p: Project, pf: Platform, progress: (done: numbe
     [root + 'story.json']: strToU8(JSON.stringify(story)),
     [root + 'metadata.json']: strToU8(JSON.stringify(metadata, null, 1)),
   };
+  for (const [id, path] of images) {
+    files[root + path] = [await rasterize(getBlob(id)!, pf.image.w, pf.image.h, pf.image.mode), { level: 0 }];
+  }
   for (let i = 0; i < unique.length; i++) {
     progress(i, unique.length);
     const data = await renderSound(unique[i].sound, pf.sampleRate);

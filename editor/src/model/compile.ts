@@ -7,7 +7,10 @@ export type AudioRef = (key: string, sound: Sound | null) => string | null;
 
 export const previewAudioRef: AudioRef = (key, s) => (hasAudio(s) ? key : null);
 
-export function compile(p: Project, audio: AudioRef = previewAudioRef): Story {
+/** `image(mediaId)` renvoie le chemin de l'image dans le pack (ou l'identifiant, en prévisualisation). */
+export type ImageRef = (media: string | null) => string | null;
+
+export function compile(p: Project, audio: AudioRef = previewAudioRef, image: ImageRef = (m) => m): Story {
   const nodes: RNode[] = [];
   const start = p.blocks.find((b) => b.type === 'start');
   // Une flèche vers le bloc Début (bloc Retour « au début ») vise en fait la première scène.
@@ -19,16 +22,16 @@ export function compile(p: Project, audio: AudioRef = previewAudioRef): Story {
     switch (b.type) {
       case 'start': break;
       case 'scene':
-        nodes.push({ id: b.id, type: 'scene', title: b.title, text: b.text, audio: audio(b.id, b.sound), next: T(b.next) });
+        nodes.push({ id: b.id, type: 'scene', title: b.title, text: b.text, audio: audio(b.id, b.sound), image: image(b.image ?? null), next: T(b.next) });
         break;
       case 'choice':
         nodes.push({
-          id: b.id, type: 'choice', title: b.title, text: b.text, audio: audio(b.id, b.sound),
+          id: b.id, type: 'choice', title: b.title, text: b.text, audio: audio(b.id, b.sound), image: image(b.image ?? null),
           options: b.options.map((o) => ({ text: o.text, audio: audio(`${b.id}/${o.id}`, o.sound), next: T(o.next) })),
         });
         break;
       case 'end':
-        nodes.push({ id: b.id, type: 'end', kind: b.kind, title: b.title, text: b.text, audio: audio(b.id, b.sound) });
+        nodes.push({ id: b.id, type: 'end', kind: b.kind, title: b.title, text: b.text, audio: audio(b.id, b.sound), image: image(b.image ?? null) });
         break;
       case 'item':
         if (!b.item) nodes.push(pass(b.id, b.next));
@@ -49,6 +52,7 @@ export function compile(p: Project, audio: AudioRef = previewAudioRef): Story {
 
   return {
     format: 'herodio-story', version: 1, id: p.id, title: p.title, author: p.author, description: p.description,
+    cover: image(p.cover ?? null), color: p.color,
     start: start?.type === 'start' ? start.next : null,
     items: p.items.map(({ id, name }) => ({ id, name })),
     variables: p.variables.map(({ id, name, initial }) => ({ id, name, initial })),

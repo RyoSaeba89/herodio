@@ -37,6 +37,10 @@ export function attachMedia(key: string, m: Media) {
 export function attachMediaToBlock(blockId: string, mediaId: string) {
   const m = useStore.getState().project.media.find((x) => x.id === mediaId);
   const b = useStore.getState().project.blocks.find((x) => x.id === blockId);
+  if (m?.category === 'image') {
+    useStore.getState().update((p) => { const x = p.blocks.find((y) => y.id === blockId); if (x && 'image' in x) x.image = m.id; });
+    return;
+  }
   if (m && b && soundSlots(b).length) attachMedia(blockId, m);
 }
 

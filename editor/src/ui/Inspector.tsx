@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { deleteBlocks, duplicateBlock } from '../actions';
 import type { CmpOp, Test } from '../engine/engine';
-import { uid, type Block, type ChoiceBlock, type CondBlock, type ItemBlock, type LoopBlock, type Project, type VarBlock } from '../model/project';
+import { STORY_COLORS, uid, type Block, type ChoiceBlock, type CondBlock, type ItemBlock, type LoopBlock, type Project, type VarBlock } from '../model/project';
 import { updateBlock, useStore } from '../store';
 import { BLOCKS, END_KINDS, ITEM_ICONS } from './blocks';
+import { ImageSlot } from './ImageSlot';
 import { SoundSlot } from './SoundSlot';
 import { VoiceToggle } from './VoiceToggle';
 
@@ -162,6 +163,8 @@ function BlockInspector({ b, project }: { b: Block; project: Project }) {
         <>
           <label>{b.type === 'choice' ? 'La question posée' : 'Ce que raconte le narrateur'}</label>
           <TextField multiline value={b.text} placeholder="Écris ici le texte (il sera aussi affiché sur les écrans)" onChange={(v) => edit<typeof b>(b.id, (x) => { x.text = v; })} />
+          <label>Illustration</label>
+          <ImageSlot value={b.image ?? null} onChange={(id) => updateBlock<typeof b>(b.id, (x) => { x.image = id; })} />
           <label>{b.type === 'choice' ? 'Son de la question' : 'Son'}</label>
           <SoundSlot slotKey={b.id} sound={b.sound} label={b.title} text={b.text || b.title} />
         </>
@@ -253,6 +256,15 @@ function StoryInspector({ project }: { project: Project }) {
       <TextField value={project.author} placeholder="Ton prénom" onChange={(v) => p((x) => { x.author = v; })} />
       <label>Résumé</label>
       <TextField multiline value={project.description} placeholder="De quoi parle ton histoire ?" onChange={(v) => p((x) => { x.description = v; })} />
+      <label>Image de couverture</label>
+      <ImageSlot label="Couverture" value={project.cover} onChange={(id) => useStore.getState().update((x) => { x.cover = id; })} />
+      <label>Couleur de l’histoire</label>
+      <div className="colors">
+        {STORY_COLORS.map((c) => (
+          <button key={c} className={c === project.color ? 'on' : ''} style={{ background: c }} title={c}
+            onClick={() => useStore.getState().update((x) => { x.color = c; })} />
+        ))}
+      </div>
       <VoiceToggle />
       {advanced && (
         <>

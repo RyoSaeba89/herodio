@@ -10,6 +10,7 @@ import type { Issue } from '../model/validate';
 import { useStore } from '../store';
 import { BLOCKS, END_KINDS, PALETTE_ORDER } from './blocks';
 import { attachMediaToBlock } from './sound';
+import { imageUrl } from '../audio/images';
 
 type NodeData = { block: Block; issue: Issue['level'] | null; playing: boolean; visited: boolean; itemName: (id: string | null) => string; varName: (id: string | null) => string };
 type BNode = Node<NodeData, 'block'>;
@@ -47,6 +48,7 @@ function BlockNode({ data, selected }: NodeProps<BNode>) {
         {audio && <span className="block-badge" title="Ce bloc a un son">🔊</span>}
         {data.issue && <span className={'block-badge issue-' + data.issue} title="Voir les vérifications">{data.issue === 'error' ? '⛔' : '⚠️'}</span>}
       </div>
+      {'image' in b && b.image && imageUrl(b.image) && <img className="block-img" src={imageUrl(b.image)} alt="" />}
       {b.type !== 'start' && <div className="block-title">{title}</div>}
       {summary(b, data) && <div className="block-text">{summary(b, data)}</div>}
       <div className="block-ports">
@@ -145,7 +147,12 @@ export function Canvas({ issues }: { issues: Issue[] }) {
     const m = useStore.getState().project.media.find((x) => x.id === media);
     if (!m) return;
     const id = addBlock('scene', pos.x - 90, pos.y - 30);
-    useStore.getState().update((p) => { const b = p.blocks.find((x) => x.id === id); if (b?.type === 'scene') { b.title = m.name; b.sound = simpleSound(m); } }, false);
+    useStore.getState().update((p) => {
+      const b = p.blocks.find((x) => x.id === id);
+      if (b?.type !== 'scene') return;
+      b.title = m.name;
+      if (m.category === 'image') b.image = m.id; else b.sound = simpleSound(m);
+    }, false);
   };
 
   const openMenu = (e: RMouseEvent, node?: string) => {

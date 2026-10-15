@@ -31,18 +31,19 @@ export interface ChoiceOption { id: string; text: string; sound: Sound | null; n
 
 interface Base { id: string; x: number; y: number }
 export type StartBlock = Base & { type: 'start'; next: string | null };
-export type SceneBlock = Base & { type: 'scene'; title: string; text: string; sound: Sound | null; next: string | null };
-export type ChoiceBlock = Base & { type: 'choice'; title: string; text: string; sound: Sound | null; options: ChoiceOption[] };
+/** `image` : identifiant d'un média image (illustration), ou null. */
+export type SceneBlock = Base & { type: 'scene'; title: string; text: string; sound: Sound | null; image: string | null; next: string | null };
+export type ChoiceBlock = Base & { type: 'choice'; title: string; text: string; sound: Sound | null; image: string | null; options: ChoiceOption[] };
 export type ItemBlock = Base & { type: 'item'; op: 'give' | 'take' | 'has'; item: string | null; next: string | null; else: string | null };
 export type CondBlock = Base & { type: 'cond'; test: Test | null; then: string | null; else: string | null };
 export type VarBlock = Base & { type: 'var'; op: 'set' | 'add'; var: string | null; value: number; next: string | null };
 export type LoopBlock = Base & { type: 'loop'; target: string | null; reset: boolean };
-export type EndBlock = Base & { type: 'end'; kind: EndKind; title: string; text: string; sound: Sound | null };
+export type EndBlock = Base & { type: 'end'; kind: EndKind; title: string; text: string; sound: Sound | null; image: string | null };
 
 export type Block = StartBlock | SceneBlock | ChoiceBlock | ItemBlock | CondBlock | VarBlock | LoopBlock | EndBlock;
 export type BlockType = Block['type'];
 
-export type MediaCategory = 'enregistrement' | 'voix' | 'ambiance' | 'bruitage' | 'musique';
+export type MediaCategory = 'enregistrement' | 'voix' | 'ambiance' | 'bruitage' | 'musique' | 'image';
 
 export interface Media {
   id: string;
@@ -63,6 +64,9 @@ export interface Project {
   level: 'decouverte' | 'avance';
   /** Voix automatique : les textes sans enregistrement sont lus par la synthèse vocale (désactivée par défaut). */
   autoVoice: boolean;
+  /** Couverture (média image) et couleur de l'histoire, utilisées par les lecteurs. */
+  cover: string | null;
+  color: string;
   blocks: Block[];
   items: { id: string; name: string; icon: string }[];
   variables: { id: string; name: string; initial: number }[];
@@ -71,15 +75,18 @@ export interface Project {
 
 export const uid = () => crypto.randomUUID().replace(/-/g, '').slice(0, 10);
 
+/** Couleurs proposées pour une histoire (lisibles avec du texte blanc). */
+export const STORY_COLORS = ['#5b5bd6', '#e5484d', '#f28a1c', '#22a559', '#14b0a6', '#3b7ff5', '#8b5cf6', '#e64aa0', '#b5651d'];
+
 export const ADVANCED_TYPES: BlockType[] = ['item', 'cond', 'var', 'loop'];
 
 export function newBlock(type: BlockType, x = 0, y = 0): Block {
   const b = { id: uid(), x, y };
   switch (type) {
     case 'start': return { ...b, type, next: null };
-    case 'scene': return { ...b, type, title: 'Nouvelle scène', text: '', sound: null, next: null };
+    case 'scene': return { ...b, type, title: 'Nouvelle scène', text: '', sound: null, image: null, next: null };
     case 'choice': return {
-      ...b, type, title: 'Un choix', text: '', sound: null,
+      ...b, type, title: 'Un choix', text: '', sound: null, image: null,
       options: [
         { id: uid(), text: 'Choix 1', sound: null, next: null },
         { id: uid(), text: 'Choix 2', sound: null, next: null },
@@ -89,7 +96,7 @@ export function newBlock(type: BlockType, x = 0, y = 0): Block {
     case 'cond': return { ...b, type, test: null, then: null, else: null };
     case 'var': return { ...b, type, op: 'add', var: null, value: 1, next: null };
     case 'loop': return { ...b, type, target: null, reset: false };
-    case 'end': return { ...b, type, kind: 'happy', title: 'Fin', text: '', sound: null };
+    case 'end': return { ...b, type, kind: 'happy', title: 'Fin', text: '', sound: null, image: null };
   }
 }
 
@@ -97,7 +104,7 @@ export function newProject(title = 'Mon histoire'): Project {
   const start = newBlock('start', 0, 0);
   return {
     format: 'herodio-project', version: 1, id: uid(), title, author: '', description: '',
-    level: 'decouverte', autoVoice: false, blocks: [start], items: [], variables: [], media: [],
+    level: 'decouverte', autoVoice: false, cover: null, color: STORY_COLORS[0], blocks: [start], items: [], variables: [], media: [],
   };
 }
 
@@ -175,8 +182,13 @@ export function simpleSound(m: Media, role: TrackRole = 'voix'): Sound {
   };
 }
 
+export const blockImage = (b: Block): string | null => ('image' in b ? b.image ?? null : null);
+
 export function mediaUsage(p: Project): Map<string, number> {
   const used = new Map<string, number>();
+  const add = (id: string | null) => id && used.set(id, (used.get(id) ?? 0) + 1);
+  add(p.cover);
+  for (const b of p.blocks) add(blockImage(b));
   for (const b of p.blocks) for (const s of soundSlots(b))
     for (const t of s.sound?.tracks ?? []) for (const c of t.clips) used.set(c.media, (used.get(c.media) ?? 0) + 1);
   return used;

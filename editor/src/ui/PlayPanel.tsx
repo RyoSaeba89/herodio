@@ -1,6 +1,7 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
 import { playSound, stop, usePlayingKey } from '../audio/player';
 import { autoSound } from '../audio/tts';
+import { imageUrl } from '../audio/images';
 import { Engine } from '../engine/engine';
 import { compile } from '../model/compile';
 import { soundSlots, type Sound } from '../model/project';
@@ -83,10 +84,11 @@ export function PlayPanel() {
   const end = n?.type === 'end' ? END_KINDS.find((k) => k.kind === n.kind) : null;
 
   return (
-    <section className="play">
+    <section className="play" style={{ borderTopColor: project.color }}>
       <div className="play-main">
         {e.status === 'error' && <div className="play-card error-card"><h2>🌀 Boucle infinie !</h2><p>Des blocs se renvoient l’un à l’autre sans jamais s’arrêter sur une scène ou un choix.</p></div>}
         {e.status === 'end' && !n && <div className="play-card"><h2>🛑 L’histoire s’arrête ici</h2><p>Aucun bloc n’est relié après celui-ci.</p></div>}
+        {n && 'image' in n && n.image && imageUrl(n.image) && <img className="play-img" src={imageUrl(n.image)} alt="" />}
         {n && 'title' in n && (
           <div className={'play-card' + (playingKey === 'play' ? ' speaking' : '')}>
             <h2>{end && <span className="emoji">{end.icon}</span>}{n.title}{end && <small> — fin {end.label.toLowerCase()}</small>}</h2>

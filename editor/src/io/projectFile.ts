@@ -26,6 +26,9 @@ export function migrate(raw: any): Project {
   raw.media ??= [];
   raw.level ??= 'decouverte';
   raw.autoVoice ??= false;
+  raw.cover ??= null;
+  raw.color ??= '#5b5bd6';
+  for (const b of raw.blocks ?? []) if (['scene', 'choice', 'end'].includes(b.type)) b.image ??= null;
   return raw as Project;
 }
 
@@ -43,4 +46,4 @@ export async function unpackProject(bytes: Uint8Array): Promise<Project> {
 }
 
 export const mimeOf = (ext: string) =>
-  ({ wav: 'audio/wav', mp3: 'audio/mpeg', ogg: 'audio/ogg', webm: 'audio/webm', flac: 'audio/flac', m4a: 'audio/mp4' } as Record<string, string>)[ext] ?? 'application/octet-stream';
+  ({ wav: 'audio/wav', mp3: 'audio/mpeg', ogg: 'audio/ogg', webm: 'audio/webm', flac: 'audio/flac', m4a: 'audio/mp4', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', svg: 'image/svg+xml', gif: 'image/gif' } as Record<string, string>)[ext] ?? 'application/octet-stream';

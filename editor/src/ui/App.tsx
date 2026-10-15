@@ -3,7 +3,7 @@ import { ReactFlowProvider, useReactFlow } from '@xyflow/react';
 import { applyAutoLayout, duplicateBlock } from '../actions';
 import { restoreBlobs } from '../audio/media';
 import { stop } from '../audio/player';
-import { EXAMPLES } from '../examples';
+import { TALE_EXAMPLES, TUTORIAL_EXAMPLES, type Example } from '../examples';
 import { openBytes, saveBytes } from '../io/files';
 import { PROJECT_FILTER, packProject, unpackProject } from '../io/projectFile';
 import { newProject, type Project } from '../model/project';
@@ -25,22 +25,33 @@ async function openProject(): Promise<string | null> {
 
 function Welcome({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState('');
-  const start = async (p: Project | Promise<Project>) => {
-    try { useStore.getState().load(await p); onClose(); } catch (e) { setError((e as Error).message); }
+  const [loading, setLoading] = useState('');
+  const start = async (p: Project | Promise<Project>, id = '') => {
+    setLoading(id);
+    try { useStore.getState().load(await p); onClose(); } catch (e) { setError((e as Error).message); } finally { setLoading(''); }
   };
+  const card = (x: Example) => (
+    <button key={x.id} className="story-card" style={{ '--c': x.color } as React.CSSProperties} onClick={() => start(x.make(), x.id)} disabled={!!loading}>
+      <img src={x.cover} alt="" />
+      <b>{x.title}</b>
+      <small>{x.desc}</small>
+      <span className="notion">{loading === x.id ? '⏳ Ouverture…' : `🧩 ${x.notion}`}</span>
+    </button>
+  );
   return (
     <div className="modal-back">
       <div className="modal welcome">
         <button className="modal-close" onClick={onClose} title="Fermer">✕</button>
         <h1><span className="logo">🎧</span> Herodio Studio</h1>
         <p className="lead">Crée des histoires audio dont tu es le héros !</p>
-        <div className="welcome-grid">
+        <div className="welcome-actions">
           <button className="welcome-card new" onClick={() => start(newProject())}><span>✨</span>Nouvelle histoire</button>
-          {EXAMPLES.map((x) => (
-            <button key={x.title} className="welcome-card" onClick={() => start(x.make())}><span>{x.icon}</span>{x.title}<small>{x.desc}</small></button>
-          ))}
           <button className="welcome-card" onClick={() => openProject().then((n) => n && onClose()).catch((e) => setError(e.message))}><span>📂</span>Ouvrir une histoire</button>
         </div>
+        <h3>🎓 Pour apprendre</h3>
+        <div className="story-grid">{TUTORIAL_EXAMPLES.map(card)}</div>
+        <h3>📚 Contes à jouer (6-8 ans)</h3>
+        <div className="story-grid">{TALE_EXAMPLES.map(card)}</div>
         {error && <div className="error">{error}</div>}
       </div>
     </div>

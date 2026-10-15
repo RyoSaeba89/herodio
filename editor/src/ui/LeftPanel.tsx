@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useReactFlow } from '@xyflow/react';
 import { addBlock } from '../actions';
+import { addImage, IMAGE_ACCEPT, imageUrl } from '../audio/images';
 import { addMedia, AUDIO_ACCEPT } from '../audio/media';
 import { toggleSound, usePlayingKey } from '../audio/player';
 import { pickFiles } from '../io/files';
@@ -48,6 +49,7 @@ const CATS: { cat: MediaCategory; label: string }[] = [
   { cat: 'ambiance', label: '🌲 Ambiances' },
   { cat: 'bruitage', label: '🚪 Bruitages' },
   { cat: 'musique', label: '🎵 Musiques' },
+  { cat: 'image', label: '🖼️ Images' },
 ];
 
 function Library() {
@@ -61,9 +63,12 @@ function Library() {
 
   const importFiles = async () => {
     setError('');
-    for (const f of await pickFiles(AUDIO_ACCEPT, true)) {
-      try { await addMedia(f, f.name.replace(/\.\w+$/, ''), cat === 'all' ? 'bruitage' : cat); }
-      catch (e) { setError((e as Error).message); }
+    for (const f of await pickFiles(cat === 'image' ? IMAGE_ACCEPT : AUDIO_ACCEPT + ',' + IMAGE_ACCEPT, true)) {
+      const name = f.name.replace(/\.\w+$/, '');
+      try {
+        if (f.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|svg)$/i.test(f.name)) await addImage(f, name);
+        else await addMedia(f, name, cat === 'all' || cat === 'image' ? 'bruitage' : cat);
+      } catch (e) { setError((e as Error).message); }
     }
   };
 
@@ -73,20 +78,24 @@ function Library() {
         <button className={'chip' + (cat === 'all' ? ' on' : '')} onClick={() => setCat('all')}>Tous</button>
         {CATS.map((c) => <button key={c.cat} className={'chip' + (cat === c.cat ? ' on' : '')} onClick={() => setCat(c.cat)}>{c.label}</button>)}
       </div>
-      <button className="btn wide" onClick={importFiles}>📁 Importer des sons</button>
+      <button className="btn wide" onClick={importFiles}>📁 Importer des sons ou des images</button>
       {error && <div className="error">{error}</div>}
       {list.length === 0 && <p className="hint">Aucun son ici. Importe des fichiers (WAV, MP3, OGG…) ou enregistre ta voix depuis un bloc.</p>}
       {list.map((m) => (
         <div key={m.id} className="media" draggable onDragStart={(e) => { e.dataTransfer.setData('application/herodio-media', m.id); e.dataTransfer.effectAllowed = 'copy'; }}
-          title="Glisse ce son sur un bloc">
-          <button className="btn round" onClick={() => toggleSound(simpleSound(m), 'lib:' + m.id)}>{playing === 'lib:' + m.id ? '⏹' : '▶'}</button>
+          title="Glisse-le sur un bloc">
+          {m.category === 'image'
+            ? <img className="thumb" src={imageUrl(m.id)} alt="" />
+            : <button className="btn round" onClick={() => toggleSound(simpleSound(m), 'lib:' + m.id)}>{playing === 'lib:' + m.id ? '⏹' : '▶'}</button>}
           <div className="media-main">
             <TextField value={m.name} onChange={(v) => useStore.getState().update((p) => { p.media.find((x) => x.id === m.id)!.name = v; }, false)} />
             <div className="media-meta">
-              <select value={m.category} onChange={(e) => upd((p) => { p.media.find((x) => x.id === m.id)!.category = e.target.value as MediaCategory; })}>
-                {CATS.map((c) => <option key={c.cat} value={c.cat}>{c.label}</option>)}
-              </select>
-              <span>{fmtDur(m.duration)}</span>
+              {m.category === 'image' ? <span>🖼️ Image</span> : <>
+                <select value={m.category} onChange={(e) => upd((p) => { p.media.find((x) => x.id === m.id)!.category = e.target.value as MediaCategory; })}>
+                  {CATS.filter((c) => c.cat !== 'image').map((c) => <option key={c.cat} value={c.cat}>{c.label}</option>)}
+                </select>
+                <span>{fmtDur(m.duration)}</span>
+              </>}
               {used.get(m.id) ? <span className="used">utilisé ×{used.get(m.id)}</span> : <span className="unused">inutilisé</span>}
             </div>
           </div>

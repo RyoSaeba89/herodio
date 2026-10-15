@@ -1,21 +1,10 @@
-"""Génère les sons de l'exemple « La forêt enchantée ».
+"""Fonctions de synthèse sonore (ambiances, oiseaux, pas, magie, hibou, berceuse) utilisées par gen_sons.py.
 
-- Bruitages et musique : synthétisés par ce script (aucun échantillon externe, domaine public / CC0).
-- Narration : synthèse vocale Windows (voix « Microsoft Hortense »), générée localement.
-  Remplacez ces fichiers par de vraies voix enregistrées avant toute diffusion publique de l'exemple.
-
-Usage : python tools/gen_example_audio.py   (nécessite numpy, ffmpeg et Windows pour la narration)
+Tout est synthétisé par le code : domaine public (CC0).
 """
-import json
-import os
-import subprocess
-import tempfile
-import wave
-
 import numpy as np
 
 SR = 22050
-OUT = os.path.join(os.path.dirname(__file__), '..', 'editor', 'public', 'examples', 'foret')
 rng = np.random.default_rng(42)
 
 
@@ -54,7 +43,7 @@ def bird():
 
 
 def place(buf, sig, at, gain=1.0):
-    i = int(at * SR)
+    i = max(0, int(at * SR))
     n = min(len(sig), len(buf) - i)
     if n > 0: buf[i:i + n] += sig[:n] * gain
 
@@ -116,63 +105,3 @@ def music(d=24.0):
         pad = sum(np.sin(2 * np.pi * root * m * nt) for m in (1, 1.5, 2)) * env(len(nt), seg * 0.4, seg * 0.4)
         place(out, pad, i * seg, 0.05)
     return out * env(len(out), 1.0, 3.0)
-
-
-def write_wav(path, x):
-    x = x / max(1e-9, np.max(np.abs(x))) * 0.9
-    with wave.open(path, 'wb') as w:
-        w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR)
-        w.writeframes((x * 32767).astype('<i2').tobytes())
-
-
-def to_ogg(wav, name):
-    dst = os.path.join(OUT, name + '.ogg')
-    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', wav, '-ac', '1', '-c:a', 'libvorbis', '-q:a', '3', dst], check=True)
-    return dst
-
-
-NARRATION = {
-    'n-oree': "Te voici à l'orée de la forêt enchantée. Le vent chante dans les feuilles, et les oiseaux te souhaitent la bienvenue. Devant toi, le chemin se sépare en deux.",
-    'n-chemin': "Que veux-tu faire ? Suivre les lucioles, ou écouter le vieux hibou ?",
-    'o-lucioles': "Suivre les lucioles.",
-    'o-hibou': "Écouter le vieux hibou.",
-    'n-lucioles': "Les petites lumières dansent autour de toi et te guident jusqu'à une clairière. Une fée minuscule t'attend, assise sur un champignon. Elle te tend une potion qui brille.",
-    'n-fee': "Bois cette potion, dit la fée, et tu pourras parler aux animaux. Acceptes-tu ?",
-    'o-accepter': "Accepter la potion.",
-    'o-refuser': "Refuser poliment.",
-    'n-fin-animaux': "Tu bois la potion. Soudain, tu entends un écureuil te dire bonjour ! Désormais, tous les animaux de la forêt sont tes amis.",
-    'n-fin-maison': "Tu remercies la fée et tu rentres à la maison. La forêt restera là, à t'attendre, pour une prochaine aventure.",
-    'n-hibou': "Hou hou ! Le vieux hibou ouvre un œil. Je vais te confier un secret, murmure-t-il. Au cœur de la forêt, un arbre géant garde tous les rêves des enfants.",
-    'n-fin-secret': "Tu as découvert le secret de la forêt enchantée. Chut ! Ne le répète à personne.",
-}
-
-
-def tts(text, wav):
-    ps = (
-        "Add-Type -AssemblyName System.Speech;"
-        "$s = New-Object System.Speech.Synthesis.SpeechSynthesizer;"
-        "$v = $s.GetInstalledVoices() | Where-Object { $_.VoiceInfo.Culture.Name -eq 'fr-FR' } | Select-Object -First 1;"
-        "$s.SelectVoice($v.VoiceInfo.Name); $s.Rate = -1;"
-        f"$s.SetOutputToWaveFile('{wav}'); $s.Speak([Console]::In.ReadToEnd()); $s.Dispose()"
-    )
-    subprocess.run(['powershell', '-NoProfile', '-Command', ps], input=text.encode('utf-8'), check=True)
-
-
-def main():
-    os.makedirs(OUT, exist_ok=True)
-    tmp = tempfile.mkdtemp()
-    sounds = {'ambiance-foret': forest(), 'pas-feuilles': footsteps(), 'magie': sparkle(), 'hibou': owl(), 'berceuse': music()}
-    durations = {}
-    for name, x in sounds.items():
-        w = os.path.join(tmp, name + '.wav'); write_wav(w, x); to_ogg(w, name)
-        durations[name] = len(x) / SR
-    for name, text in NARRATION.items():
-        w = os.path.join(tmp, name + '.wav'); tts(text, w); to_ogg(w, name)
-        with wave.open(w) as f: durations[name] = f.getnframes() / f.getframerate()
-    with open(os.path.join(OUT, 'durees.json'), 'w', encoding='utf-8') as f:
-        json.dump({k: round(v, 3) for k, v in durations.items()}, f, indent=1)
-    print('OK', len(durations), 'sons dans', os.path.abspath(OUT))
-
-
-if __name__ == '__main__':
-    main()
