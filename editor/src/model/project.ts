@@ -61,6 +61,8 @@ export interface Project {
   author: string;
   description: string;
   level: 'decouverte' | 'avance';
+  /** Voix automatique : les textes sans enregistrement sont lus par la synthèse vocale (désactivée par défaut). */
+  autoVoice: boolean;
   blocks: Block[];
   items: { id: string; name: string; icon: string }[];
   variables: { id: string; name: string; initial: number }[];
@@ -95,7 +97,7 @@ export function newProject(title = 'Mon histoire'): Project {
   const start = newBlock('start', 0, 0);
   return {
     format: 'herodio-project', version: 1, id: uid(), title, author: '', description: '',
-    level: 'decouverte', blocks: [start], items: [], variables: [], media: [],
+    level: 'decouverte', autoVoice: false, blocks: [start], items: [], variables: [], media: [],
   };
 }
 
@@ -135,6 +137,20 @@ export function soundSlots(b: Block): { key: string; label: string; sound: Sound
     ...b.options.map((o, i) => ({ key: `${b.id}/${o.id}`, label: o.text || `Choix ${i + 1}`, sound: o.sound })),
   ];
   return [];
+}
+
+/** Texte lu par la voix automatique pour un emplacement sonore. */
+export function slotText(b: Block, key: string): string {
+  if (b.type === 'choice' && key !== b.id) return b.options.find((o) => `${b.id}/${o.id}` === key)?.text ?? '';
+  if (b.type === 'scene' || b.type === 'choice' || b.type === 'end') return b.text.trim() || b.title;
+  return '';
+}
+
+/** Remplace le son d'un emplacement (modifie le bloc). */
+export function assignSlotSound(b: Block, key: string, sound: Sound | null) {
+  const oid = key.split('/')[1];
+  if (oid && b.type === 'choice') { const o = b.options.find((x) => x.id === oid); if (o) o.sound = sound; }
+  else if (!oid && (b.type === 'scene' || b.type === 'choice' || b.type === 'end')) b.sound = sound;
 }
 
 export function hasAudio(s: Sound | null): s is Sound {

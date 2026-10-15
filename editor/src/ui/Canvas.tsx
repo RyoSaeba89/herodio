@@ -178,7 +178,6 @@ export function Canvas({ issues }: { issues: Issue[] }) {
         minZoom={0.2}
         fitView
         fitViewOptions={{ maxZoom: 1, minZoom: 0.5, padding: 0.1 }}
-        proOptions={{ hideAttribution: true }}
       >
         <Background gap={24} size={2} color="var(--grid)" />
         <Controls showInteractive={false} />

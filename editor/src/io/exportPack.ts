@@ -1,6 +1,7 @@
 // Export d'un pack de lecture (.aistory) : story.json + metadata.json + sons prémixés en WAV mono.
 // Chaque son multipiste est mixé ici, une fois pour toutes : les lecteurs n'ont qu'un seul fichier à lire à la fois.
 import { strToU8, zipSync, type Zippable } from 'fflate';
+import { autoVoiceSlots, withAutoVoices } from '../audio/autovoice';
 import { encodeWav, renderSound } from '../audio/mixer';
 import { compile } from '../model/compile';
 import { hasAudio, soundDuration, soundSlots, type Project, type Sound } from '../model/project';
@@ -43,8 +44,10 @@ function collect(p: Project) {
 
 export function estimate(p: Project, pf: Platform) {
   const { unique } = collect(p);
-  const seconds = unique.reduce((a, u) => a + soundDuration(u.sound), 0);
-  return { seconds, bytes: seconds * pf.sampleRate * 2 + unique.length * 44 + 20000, files: unique.length };
+  // Voix automatique : environ 13 caractères lus par seconde.
+  const auto = autoVoiceSlots(p);
+  const seconds = unique.reduce((a, u) => a + soundDuration(u.sound), 0) + auto.reduce((a, s) => a + s.text.length / 13 + 0.3, 0);
+  return { seconds, bytes: seconds * pf.sampleRate * 2 + unique.length * 44 + 20000, files: unique.length + auto.length };
 }
 
 export function slug(s: string) {
@@ -67,7 +70,8 @@ export function diagnose(p: Project, pf: Platform): string[] {
 
 export const mb = (b: number) => `${(b / 1e6).toFixed(b < 1e7 ? 1 : 0).replace('.', ',')} Mo`;
 
-export async function buildPack(p: Project, pf: Platform, progress: (done: number, total: number) => void): Promise<{ name: string; bytes: Uint8Array }> {
+export async function buildPack(p: Project, pf: Platform, progress: (done: number, total: number, step?: string) => void): Promise<{ name: string; bytes: Uint8Array }> {
+  if (p.autoVoice) p = await withAutoVoices(p, (d, t) => progress(d, t, 'voix'));
   const { unique, slotFile } = collect(p);
   const story = compile(p, (key) => slotFile.get(key) ?? null);
   const metadata = {

@@ -17,6 +17,7 @@ export function ExportDialog({ issues, onClose }: { issues: Issue[]; onClose: ()
   const project = useStore((s) => s.project);
   const [pf, setPf] = useState<Platform>(PLATFORMS[0]);
   const [busy, setBusy] = useState<number | null>(null);
+  const [step, setStep] = useState('');
   const [done, setDone] = useState('');
   const [error, setError] = useState('');
   const errors = issues.filter((i) => i.level === 'error');
@@ -26,7 +27,7 @@ export function ExportDialog({ issues, onClose }: { issues: Issue[]; onClose: ()
   const run = async () => {
     setError(''); setDone(''); setBusy(0);
     try {
-      const pack = await buildPack(project, pf, (d, t) => setBusy(t ? d / t : 1));
+      const pack = await buildPack(project, pf, (d, t, st) => { setStep(st === 'voix' ? 'La voix lit ton histoire' : 'Mixage des sons'); setBusy(t ? d / t : 1); });
       const saved = await saveBytes(pack.name, pack.bytes, pf.output === 'sd' ? { name: 'Archive ZIP', extensions: ['zip'] } : { name: 'Pack Herodio', extensions: ['aistory'] });
       if (saved) setDone(`✔ Pack créé (${mb(pack.bytes.length)}) : ${saved}`);
     } catch (e) {
@@ -63,7 +64,7 @@ export function ExportDialog({ issues, onClose }: { issues: Issue[]; onClose: ()
         <div className="export-actions">
           <button className="btn" onClick={onClose}>Fermer</button>
           <button className="btn export-btn" disabled={busy !== null || errors.length > 0} onClick={run}>
-            {busy !== null ? `Préparation… ${Math.round(busy * 100)} %` : `📦 Exporter pour ${pf.name}`}
+            {busy !== null ? `${step || 'Préparation'}… ${Math.round(busy * 100)} %` : `📦 Exporter pour ${pf.name}`}
           </button>
         </div>
       </div>

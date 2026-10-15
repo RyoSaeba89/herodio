@@ -5,6 +5,7 @@ import { uid, type Block, type ChoiceBlock, type CondBlock, type ItemBlock, type
 import { updateBlock, useStore } from '../store';
 import { BLOCKS, END_KINDS, ITEM_ICONS } from './blocks';
 import { SoundSlot } from './SoundSlot';
+import { VoiceToggle } from './VoiceToggle';
 
 /** Champ texte : un seul « annuler » pour toute une saisie. */
 export function TextField({ value, onChange, multiline, placeholder }: { value: string; onChange: (v: string) => void; multiline?: boolean; placeholder?: string }) {
@@ -162,7 +163,7 @@ function BlockInspector({ b, project }: { b: Block; project: Project }) {
           <label>{b.type === 'choice' ? 'La question posée' : 'Ce que raconte le narrateur'}</label>
           <TextField multiline value={b.text} placeholder="Écris ici le texte (il sera aussi affiché sur les écrans)" onChange={(v) => edit<typeof b>(b.id, (x) => { x.text = v; })} />
           <label>{b.type === 'choice' ? 'Son de la question' : 'Son'}</label>
-          <SoundSlot slotKey={b.id} sound={b.sound} label={b.title} />
+          <SoundSlot slotKey={b.id} sound={b.sound} label={b.title} text={b.text || b.title} />
         </>
       )}
 
@@ -177,7 +178,7 @@ function BlockInspector({ b, project }: { b: Block; project: Project }) {
                 <button className="btn ghost" title="Supprimer cette réponse" disabled={b.options.length <= 1}
                   onClick={() => updateBlock<ChoiceBlock>(b.id, (x) => { x.options.splice(i, 1); })}>🗑️</button>
               </div>
-              <SoundSlot slotKey={`${b.id}/${o.id}`} sound={o.sound} label={o.text} />
+              <SoundSlot slotKey={`${b.id}/${o.id}`} sound={o.sound} label={o.text} text={o.text} />
             </div>
           ))}
           {b.options.length < 9 && (
@@ -252,6 +253,7 @@ function StoryInspector({ project }: { project: Project }) {
       <TextField value={project.author} placeholder="Ton prénom" onChange={(v) => p((x) => { x.author = v; })} />
       <label>Résumé</label>
       <TextField multiline value={project.description} placeholder="De quoi parle ton histoire ?" onChange={(v) => p((x) => { x.description = v; })} />
+      <VoiceToggle />
       {advanced && (
         <>
           <label>🎒 Objets de l’histoire</label>

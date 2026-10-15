@@ -10,6 +10,9 @@ export const audioContext = () => (ctx ??= new AudioContext());
 
 export const getBlob = (id: string) => blobs.get(id);
 
+/** Son temporaire, gardé seulement en mémoire (ex. voix automatique, déjà en cache ailleurs). */
+export const registerBlob = (id: string, blob: Blob) => void blobs.set(id, blob);
+
 export async function putBlob(id: string, blob: Blob) {
   blobs.set(id, blob);
   await idbSet('media:' + id, blob);

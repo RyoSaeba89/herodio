@@ -1,5 +1,5 @@
 // Vérifications de l'histoire, avec des messages compréhensibles par un enfant.
-import { hasAudio, ports, soundSlots, type Block, type Project } from './project';
+import { hasAudio, ports, slotText, soundSlots, type Block, type Project } from './project';
 
 export interface Issue { level: 'error' | 'warning' | 'info'; block?: string; message: string }
 
@@ -60,7 +60,7 @@ export function validate(p: Project): Issue[] {
     for (const slot of soundSlots(b)) {
       const missing = slot.sound?.tracks.some((t) => t.clips.some((c) => !mediaIds.has(c.media)));
       if (missing) err(`Un son de « ${slot.label} » est introuvable.`, b.id);
-      else if (!hasAudio(slot.sound)) {
+      else if (!hasAudio(slot.sound) && !(p.autoVoice && slotText(b, slot.key))) {
         if (slot.key === b.id) warn(`« ${slot.label} » n’a pas encore de son.`, b.id);
         else info(`La réponse « ${slot.label} » n’a pas de son : elle sera seulement affichée.`, b.id);
       }

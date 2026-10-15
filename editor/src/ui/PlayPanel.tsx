@@ -1,5 +1,6 @@
-import { useEffect, useReducer, useRef } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { playSound, stop, usePlayingKey } from '../audio/player';
+import { autoSound } from '../audio/tts';
 import { Engine } from '../engine/engine';
 import { compile } from '../model/compile';
 import { soundSlots, type Sound } from '../model/project';
@@ -16,6 +17,7 @@ export function PlayPanel() {
   const sounds = useRef(new Map<string, Sound | null>());
   const token = useRef(0);
   const [, force] = useReducer((x: number) => x + 1, 0);
+  const [preparing, setPreparing] = useState(false);
   const advanced = project.level === 'avance';
 
   const present = () => {
@@ -25,12 +27,24 @@ export function PlayPanel() {
     const n = e.node;
     useStore.getState().setPlaying(n?.id ?? null, [...e.path]);
     force();
-    if (!n || !('audio' in n) || !n.audio) { stop(); return; }
-    playSound(sounds.current.get(n.audio) ?? null, 'play', () => {
+    stop();
+    if (!n || !('audio' in n)) return;
+    const onEnd = () => {
       if (t !== token.current || n.type !== 'scene') return;
       e.next();
       present();
-    });
+    };
+    if (n.audio) { playSound(sounds.current.get(n.audio) ?? null, 'play', onEnd); return; }
+    // Voix automatique : le texte est lu par la synthèse vocale.
+    const text = n.text || n.title;
+    if (!useStore.getState().project.autoVoice || !text) return;
+    setPreparing(true);
+    autoSound(text).then((s) => { if (t === token.current) playSound(s, 'play', onEnd); }).catch(console.error).finally(() => setPreparing(false));
+  };
+
+  const hearOption = (o: { audio?: string | null; text: string }) => {
+    if (o.audio) playSound(sounds.current.get(o.audio) ?? null, 'option');
+    else if (useStore.getState().project.autoVoice && o.text) autoSound(o.text).then((s) => playSound(s, 'option')).catch(console.error);
   };
 
   useEffect(() => {
@@ -78,13 +92,13 @@ export function PlayPanel() {
             <h2>{end && <span className="emoji">{end.icon}</span>}{n.title}{end && <small> — fin {end.label.toLowerCase()}</small>}</h2>
             {n.text && <p>{n.text}</p>}
             {playingKey === 'play' && <div className="eq"><span /><span /><span /><span /></div>}
+            {preparing && <div className="preparing">🗣️ La voix se prépare…</div>}
           </div>
         )}
         <div className="play-actions">
           {n?.type === 'choice' && n.options.map((o, i) => (
             <button key={i} className="btn choice-btn" onClick={() => choose(i)}
-              onMouseEnter={() => o.audio && playSound(sounds.current.get(o.audio) ?? null, 'option')}
-              onFocus={() => o.audio && playSound(sounds.current.get(o.audio) ?? null, 'option')}>
+              onMouseEnter={() => hearOption(o)} onFocus={() => hearOption(o)}>
               <span className="option-num">{i + 1}</span> {o.text}
             </button>
           ))}

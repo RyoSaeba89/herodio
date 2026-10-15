@@ -310,3 +310,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .toolbar { gap: 6px; }
   .btn.play-btn, .btn.export-btn { font-size: 15px; padding: 8px 12px; }
 }
+
+/* ---------- Voix automatique ---------- */
+.voice-card { border: 2px solid var(--line); border-radius: 14px; padding: 10px 12px; margin-top: 16px; }
+.voice-card.on { border-color: #22a559; background: #effaf3; }
+.voice-switch { font-weight: 800 !important; font-size: 15px; margin: 0 !important; }
+.voice-switch input { width: 20px; height: 20px; accent-color: #22a559; }
+.preparing { position: absolute; right: 14px; top: 12px; font-size: 13px; color: var(--muted); }

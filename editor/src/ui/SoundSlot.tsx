@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { addMedia, AUDIO_ACCEPT } from '../audio/media';
 import { startRecording, stopRecording, stop, toggleSound, usePlayingKey, playSound } from '../audio/player';
 import { pickFiles } from '../io/files';
+import { synthesize } from '../audio/tts';
 import { hasAudio, simpleSound, soundDuration, type Sound } from '../model/project';
 import { useStore } from '../store';
 import { attachMedia, fmtDur, fmtTime, setSlotSound } from './sound';
@@ -9,9 +10,11 @@ import { attachMedia, fmtDur, fmtTime, setSlotSound } from './sound';
 let recordingKey: string | null = null;
 
 /** Un emplacement sonore : enregistrer, écouter, importer, choisir une prise, ouvrir le studio. */
-export function SoundSlot({ slotKey, sound, label }: { slotKey: string; sound: Sound | null; label: string }) {
+export function SoundSlot({ slotKey, sound, label, text = '' }: { slotKey: string; sound: Sound | null; label: string; text?: string }) {
   const media = useStore((s) => s.project.media);
   const advanced = useStore((s) => s.project.level === 'avance');
+  const autoVoice = useStore((s) => s.project.autoVoice);
+  const [speaking, setSpeaking] = useState(false);
   const playingKey = usePlayingKey();
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -61,6 +64,17 @@ export function SoundSlot({ slotKey, sound, label }: { slotKey: string; sound: S
     catch (e) { setError((e as Error).message); }
   };
 
+  /** Transforme la voix automatique en vraie prise, modifiable dans le studio. */
+  const makeVoice = async () => {
+    setError(''); setSpeaking(true);
+    try {
+      const m = await addMedia(await synthesize(text), `Voix auto – ${label}`, 'voix', slotKey);
+      attachMedia(slotKey, m);
+      playSound(simpleSound(m), slotKey);
+    } catch (e) { setError('La voix automatique n’a pas fonctionné : ' + (e as Error).message); }
+    finally { setSpeaking(false); }
+  };
+
   const onDrop = (e: React.DragEvent) => {
     setOver(false);
     const id = e.dataTransfer.getData('application/herodio-media');
@@ -78,11 +92,15 @@ export function SoundSlot({ slotKey, sound, label }: { slotKey: string; sound: S
           {playingKey === slotKey ? '⏹ Stop' : '▶ Écouter'}
         </button>
         <button className="btn ghost" onClick={importFile} disabled={recording} title="Choisir un fichier son sur l’ordinateur">📁</button>
+        {autoVoice && text.trim() && (
+          <button className="btn ghost" onClick={makeVoice} disabled={recording || speaking} title="Créer une prise avec la voix automatique (tu pourras la modifier)">{speaking ? '⏳' : '🗣️'}</button>
+        )}
         {advanced && <button className="btn ghost" onClick={() => { stop(); useStore.getState().openStudio(slotKey); }} title="Ouvrir le studio audio (couper, mixer, fondus…)">🎛️</button>}
         {has && <button className="btn ghost" onClick={() => setSlotSound(slotKey, null)} title="Retirer le son">🗑️</button>}
       </div>
       <div className="slot-info">
-        {has ? `🔊 ${fmtDur(soundDuration(sound))}${multi ? ' · mixage ' + sound!.tracks.length + ' pistes' : ''}` : 'Pas encore de son — enregistre ou glisse un son ici'}
+        {has ? `🔊 ${fmtDur(soundDuration(sound))}${multi ? ' · mixage ' + sound!.tracks.length + ' pistes' : ''}`
+          : autoVoice && text.trim() ? '🗣️ Lu par la voix automatique (enregistre ta voix pour la remplacer)' : 'Pas encore de son — enregistre ou glisse un son ici'}
       </div>
       {takes.length > 1 && (
         <div className="takes">

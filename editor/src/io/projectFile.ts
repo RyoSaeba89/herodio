@@ -25,6 +25,7 @@ export function migrate(raw: any): Project {
   raw.variables ??= [];
   raw.media ??= [];
   raw.level ??= 'decouverte';
+  raw.autoVoice ??= false;
   return raw as Project;
 }
 

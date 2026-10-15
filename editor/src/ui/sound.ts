@@ -1,4 +1,4 @@
-import { hasAudio, simpleSound, soundSlots, uid, type Media, type Sound, type TrackRole } from '../model/project';
+import { assignSlotSound, hasAudio, simpleSound, soundSlots, uid, type Media, type Sound, type TrackRole } from '../model/project';
 import { useStore } from '../store';
 
 export function getSlotSound(key: string): Sound | null {
@@ -8,12 +8,10 @@ export function getSlotSound(key: string): Sound | null {
 }
 
 export function setSlotSound(key: string, sound: Sound | null, history = true) {
-  const [bid, oid] = key.split('/');
+  const bid = key.split('/')[0];
   useStore.getState().update((p) => {
     const b = p.blocks.find((x) => x.id === bid);
-    if (!b) return;
-    if (oid && b.type === 'choice') { const o = b.options.find((x) => x.id === oid); if (o) o.sound = sound; }
-    else if (!oid && (b.type === 'scene' || b.type === 'choice' || b.type === 'end')) b.sound = sound;
+    if (b) assignSlotSound(b, key, sound);
   }, history);
 }
 
