@@ -5,7 +5,8 @@ import { useStore } from '../store';
 
 /** Choisir une illustration : importer un fichier, prendre une image de la bibliothèque ou glisser-déposer. */
 export function ImageSlot({ value, onChange, label = 'Illustration' }: { value: string | null; onChange: (id: string | null) => void; label?: string }) {
-  const images = useStore((s) => s.project.media.filter((m) => m.category === 'image'));
+  const media = useStore((s) => s.project.media);
+  const images = media.filter((m) => m.category === 'image');
   const [error, setError] = useState('');
   const [over, setOver] = useState(false);
   const [picking, setPicking] = useState(false);

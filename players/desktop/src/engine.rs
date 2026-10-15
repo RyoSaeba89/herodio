@@ -26,9 +26,9 @@ pub struct Opt {
 #[derive(Deserialize, Clone, Debug)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum Node {
-    Scene { id: String, #[serde(default)] title: String, #[serde(default)] text: String, #[serde(default)] audio: Option<String>, next: Option<String> },
-    Choice { id: String, #[serde(default)] title: String, #[serde(default)] text: String, #[serde(default)] audio: Option<String>, options: Vec<Opt> },
-    End { id: String, kind: String, #[serde(default)] title: String, #[serde(default)] text: String, #[serde(default)] audio: Option<String> },
+    Scene { id: String, #[serde(default)] title: String, #[serde(default)] text: String, #[serde(default)] audio: Option<String>, #[serde(default)] image: Option<String>, next: Option<String> },
+    Choice { id: String, #[serde(default)] title: String, #[serde(default)] text: String, #[serde(default)] audio: Option<String>, #[serde(default)] image: Option<String>, options: Vec<Opt> },
+    End { id: String, kind: String, #[serde(default)] title: String, #[serde(default)] text: String, #[serde(default)] audio: Option<String>, #[serde(default)] image: Option<String> },
     Item { id: String, op: String, item: String, next: Option<String> },
     Var { id: String, op: String, var: String, value: i64, next: Option<String> },
     Cond { id: String, test: Test, then: Option<String>, #[serde(rename = "else")] otherwise: Option<String> },
@@ -40,6 +40,12 @@ impl Node {
         match self {
             Node::Scene { id, .. } | Node::Choice { id, .. } | Node::End { id, .. } | Node::Item { id, .. }
             | Node::Var { id, .. } | Node::Cond { id, .. } | Node::Jump { id, .. } => id,
+        }
+    }
+    pub fn image(&self) -> Option<&str> {
+        match self {
+            Node::Scene { image, .. } | Node::Choice { image, .. } | Node::End { image, .. } => image.as_deref(),
+            _ => None,
         }
     }
     pub fn audio(&self) -> Option<&str> {
@@ -68,6 +74,11 @@ pub struct Story {
     pub author: String,
     #[serde(default)]
     pub description: String,
+    /// Couverture (image du pack) et couleur d'ambiance, facultatives.
+    #[serde(default)]
+    pub cover: Option<String>,
+    #[serde(default)]
+    pub color: Option<String>,
     pub start: Option<String>,
     #[serde(default)]
     pub items: Vec<Named>,

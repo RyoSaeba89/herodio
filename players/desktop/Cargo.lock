@@ -1071,6 +1071,7 @@ version = "0.1.0"
 dependencies = [
  "crossterm",
  "eframe",
+ "image",
  "rodio",
  "serde",
  "serde_json",
@@ -1089,6 +1090,8 @@ dependencies = [
  "num-traits",
  "png",
  "tiff",
+ "zune-core",
+ "zune-jpeg",
 ]
 
 [[package]]

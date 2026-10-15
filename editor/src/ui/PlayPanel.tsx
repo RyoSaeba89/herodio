@@ -88,6 +88,7 @@ export function PlayPanel() {
       <div className="play-main">
         {e.status === 'error' && <div className="play-card error-card"><h2>🌀 Boucle infinie !</h2><p>Des blocs se renvoient l’un à l’autre sans jamais s’arrêter sur une scène ou un choix.</p></div>}
         {e.status === 'end' && !n && <div className="play-card"><h2>🛑 L’histoire s’arrête ici</h2><p>Aucun bloc n’est relié après celui-ci.</p></div>}
+        <div className="play-row">
         {n && 'image' in n && n.image && imageUrl(n.image) && <img className="play-img" src={imageUrl(n.image)} alt="" />}
         {n && 'title' in n && (
           <div className={'play-card' + (playingKey === 'play' ? ' speaking' : '')}>
@@ -97,6 +98,7 @@ export function PlayPanel() {
             {preparing && <div className="preparing">🗣️ La voix se prépare…</div>}
           </div>
         )}
+        </div>
         <div className="play-actions">
           {n?.type === 'choice' && n.options.map((o, i) => (
             <button key={i} className="btn choice-btn" onClick={() => choose(i)}

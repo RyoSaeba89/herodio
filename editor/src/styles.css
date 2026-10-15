@@ -330,7 +330,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .image-pick img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
 .block-img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
 .thumb { width: 54px; height: 40px; object-fit: cover; border-radius: 8px; flex: none; }
-.play-img { float: left; width: 280px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 16px; margin: 0 16px 8px 0; box-shadow: var(--shadow); }
+.play-row { display: flex; gap: 16px; align-items: stretch; }
+.play-row .play-card { flex: 1; }
+.play-img { width: 260px; flex: none; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 16px; box-shadow: var(--shadow); }
 .colors { display: flex; flex-wrap: wrap; gap: 6px; }
 .colors button { width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 0 2px var(--line); cursor: pointer; }
 .colors button.on { box-shadow: 0 0 0 3px var(--ink); }

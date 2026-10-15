@@ -69,9 +69,16 @@ export function autoLayout(p: Project): Map<string, { x: number; y: number }> {
     const d = depth.get(b.id) ?? maxDepth + 1;
     cols.set(d, [...(cols.get(d) ?? []), b.id]);
   }
+  // Hauteur approximative d'un bloc à l'écran (vignette et sorties comprises), pour éviter les chevauchements.
+  const height = (id: string) => {
+    const b = byId.get(id)!;
+    return 90 + ('image' in b && b.image ? 120 : 0) + ports(b).length * 24;
+  };
   const pos = new Map<string, { x: number; y: number }>();
   for (const [d, ids] of cols) {
-    ids.forEach((id, i) => pos.set(id, { x: d * 320, y: (i - (ids.length - 1) / 2) * 200 }));
+    const total = ids.reduce((a, id) => a + height(id) + 40, -40);
+    let y = -total / 2;
+    for (const id of ids) { pos.set(id, { x: d * 300, y }); y += height(id) + 40; }
   }
   return pos;
 }

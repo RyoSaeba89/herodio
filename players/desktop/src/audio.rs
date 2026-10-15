@@ -11,6 +11,10 @@ pub struct Audio {
 impl Audio {
     /// Sans carte son, le lecteur fonctionne quand même (en silence).
     pub fn new() -> Audio {
+        // HERODIO_MUET : pour les essais automatiques (aucun son ne sort).
+        if std::env::var_os("HERODIO_MUET").is_some() {
+            return Audio { sink: None, player: None };
+        }
         let sink = DeviceSinkBuilder::open_default_sink().map_err(|e| eprintln!("Pas de sortie audio : {e}")).ok().map(|mut s| {
             s.log_on_drop(false);
             s
@@ -18,7 +22,6 @@ impl Audio {
         Audio { sink, player: None }
     }
 
-    /// Sans sortie audio (tests).
     #[cfg(test)]
     pub fn silent() -> Audio {
         Audio { sink: None, player: None }

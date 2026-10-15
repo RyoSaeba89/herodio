@@ -38,7 +38,7 @@ impl Pack {
 }
 
 fn placeholder() -> Story {
-    Story { format: String::new(), version: 0, id: String::new(), title: String::new(), author: String::new(), description: String::new(), start: None, items: vec![], variables: vec![], nodes: vec![] }
+    Story { format: String::new(), version: 0, id: String::new(), title: String::new(), author: String::new(), description: String::new(), cover: None, color: None, start: None, items: vec![], variables: vec![], nodes: vec![] }
 }
 
 /// Toutes les histoires d'un dossier : fichiers .aistory et sous-dossiers contenant story.json (récursif sur 2 niveaux).
