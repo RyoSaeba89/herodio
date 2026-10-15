@@ -67,6 +67,8 @@ export interface Project {
   /** Couverture (média image) et couleur de l'histoire, utilisées par les lecteurs. */
   cover: string | null;
   color: string;
+  /** Crédits à reproduire avec l'histoire (sources, voix, illustrations). Facultatif. */
+  credits?: string[];
   blocks: Block[];
   items: { id: string; name: string; icon: string }[];
   variables: { id: string; name: string; initial: number }[];

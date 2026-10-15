@@ -2,7 +2,9 @@ package org.herodio.player;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.herodio.core.Library;
 import org.herodio.core.Session;
@@ -11,6 +13,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -23,6 +26,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.AlphaAnimation;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -34,7 +38,9 @@ import android.widget.TextView;
  * Compilé contre l'API 9 : toute API plus récente doit passer par une chaîne ou un test de Build.VERSION.SDK_INT.
  */
 public class MainActivity extends Activity implements Session.Listener {
-    private static final int ACCENT = 0xFF5B5BD6, ORANGE = 0xFFF28A1C, BG = 0xFFF4F1EA, INK = 0xFF26233A, MUTED = 0xFF6E6A85, LINE = 0xFFE4DFD3;
+    private static final int ACCENT = 0xFF5B5BD6, INK = 0xFF26233A, MUTED = 0xFF6E6A85, LINE = 0xFFE4DFD3, VIOLET = 0xFF8B5CF6;
+    /** Couleurs des réponses : orange, sarcelle, rose, violet, bleu, vert. */
+    private static final int[] CHOICE = { 0xFFF28A1C, 0xFF14B0A6, 0xFFE64AA0, 0xFF8B5CF6, 0xFF3B7FF5, 0xFF22A559 };
     private static final int REQ_IMPORT = 1;
     /** ACTION_OPEN_DOCUMENT (API 19), en toutes lettres pour rester compilable avec l'API 9. */
     private static final String OPEN_DOCUMENT = "android.intent.action.OPEN_DOCUMENT";
@@ -44,7 +50,10 @@ public class MainActivity extends Activity implements Session.Listener {
     private int libSel;
     private Session session;
     private String message = "";
+    private String lastToken = "";
     private float dp;
+    /** Quelques images récentes, pour ne pas les redécoder à chaque surbrillance. */
+    private final Map<String, Bitmap> images = new HashMap<String, Bitmap>();
 
     @Override
     protected void onCreate(Bundle state) {
@@ -108,9 +117,18 @@ public class MainActivity extends Activity implements Session.Listener {
         if (req == REQ_IMPORT && res == RESULT_OK && data != null && data.getData() != null) importUri(data.getData());
     }
 
-    // ---------------------------------------------------------------- interface
+    // ---------------------------------------------------------------- couleurs et petits outils
 
     private int px(float v) { return Math.round(v * dp); }
+
+    static int parseColor(String s, int fallback) {
+        try { return s == null ? fallback : Color.parseColor(s); } catch (IllegalArgumentException e) { return fallback; }
+    }
+
+    static int mix(int a, int b, float t) {
+        return Color.rgb((int) (Color.red(a) + (Color.red(b) - Color.red(a)) * t), (int) (Color.green(a) + (Color.green(b) - Color.green(a)) * t),
+            (int) (Color.blue(a) + (Color.blue(b) - Color.blue(a)) * t));
+    }
 
     private GradientDrawable box(int fill, int stroke, float radius) {
         GradientDrawable g = new GradientDrawable();
@@ -129,29 +147,33 @@ public class MainActivity extends Activity implements Session.Listener {
         return t;
     }
 
-    private TextView button(String s, int fill, int textColor, View.OnClickListener l) {
+    private TextView pill(String s, int fill, int textColor, View.OnClickListener l) {
         TextView b = text(s, 20, textColor, true);
-        b.setBackgroundDrawable(box(fill, fill == Color.WHITE ? ORANGE : 0, 16));
-        b.setPadding(px(18), px(14), px(18), px(14));
+        b.setBackgroundDrawable(box(fill, fill == Color.WHITE ? LINE : 0, 30));
+        b.setGravity(Gravity.CENTER);
+        b.setPadding(px(22), px(15), px(22), px(15));
         b.setOnClickListener(l);
         return b;
     }
 
-    private LinearLayout page() {
+    /** Page défilante sur fond dégradé aux couleurs de l'histoire ; renvoie la colonne où ajouter le contenu. */
+    private LinearLayout page(int color, FrameLayout[] overlay) {
         LinearLayout col = new LinearLayout(this);
         col.setOrientation(LinearLayout.VERTICAL);
-        int pad = px(16);
-        col.setPadding(pad, pad, pad, pad);
+        col.setPadding(px(16), px(16), px(16), px(24));
         ScrollView scroll = new ScrollView(this);
-        scroll.setBackgroundColor(BG);
         scroll.setFillViewport(true);
-        // Sur tablette, le contenu reste centré avec une largeur confortable.
         FrameLayout center = new FrameLayout(this);
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(Math.min(getResources().getDisplayMetrics().widthPixels, px(760)), ViewGroup.LayoutParams.WRAP_CONTENT);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(Math.min(getResources().getDisplayMetrics().widthPixels, px(820)), ViewGroup.LayoutParams.WRAP_CONTENT);
         lp.gravity = Gravity.CENTER_HORIZONTAL;
         center.addView(col, lp);
         scroll.addView(center);
-        setContentView(scroll);
+        FrameLayout frame = new FrameLayout(this);
+        frame.setBackgroundDrawable(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+            new int[] { mix(color, Color.WHITE, 0.88f), mix(color, Color.WHITE, 0.62f) }));
+        frame.addView(scroll);
+        if (overlay != null) overlay[0] = frame;
+        setContentView(frame);
         return col;
     }
 
@@ -161,54 +183,96 @@ public class MainActivity extends Activity implements Session.Listener {
         parent.addView(v, lp);
     }
 
+    private Bitmap image(File dir, String rel, int width) {
+        if (rel == null || rel.contains("..")) return null;
+        String key = dir.getAbsolutePath() + "|" + rel;
+        Bitmap b = images.get(key);
+        if (b == null) {
+            if (images.size() > 6) images.clear();
+            b = Views.load(new File(dir, rel), width);
+            if (b != null) images.put(key, b);
+        }
+        return b;
+    }
+
+    // ---------------------------------------------------------------- bibliothèque
+
     private void showLibrary() {
         session = null;
         library = Library.list(root);
         libSel = Math.min(libSel, Math.max(0, library.size() - 1));
-        LinearLayout col = page();
-        add(col, text("Mes histoires", 30, INK, true), 0);
+        LinearLayout col = page(ACCENT, null);
+        add(col, text("Mes histoires", 32, INK, true), 0);
         if (Build.VERSION.SDK_INT >= 19) {
-            add(col, button("+ Ajouter une histoire (.aistory)", ACCENT, Color.WHITE, new View.OnClickListener() {
+            add(col, pill("+  Ajouter une histoire", ACCENT, Color.WHITE, new View.OnClickListener() {
                 public void onClick(View v) {
-                    Intent i = new Intent(OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*");
-                    startActivityForResult(i, REQ_IMPORT);
+                    startActivityForResult(new Intent(OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*"), REQ_IMPORT);
                 }
             }), 10);
         } else {
             add(col, text("Copie tes fichiers .aistory dans le dossier « Herodio » de la carte SD, puis relance l'application.", 15, MUTED, false), 6);
         }
-        if (message.length() > 0) add(col, text(message, 16, ORANGE, true), 10);
+        if (message.length() > 0) add(col, text(message, 16, CHOICE[0], true), 10);
         if (library.isEmpty()) {
             add(col, text("Aucune histoire pour l'instant. Crée-en une avec Herodio Studio, puis « Exporter mon histoire » → Android.", 18, MUTED, false), 24);
+            return;
         }
+        // Deux colonnes sur tablette ou en paysage, une sur téléphone.
+        int widthDp = (int) (Math.min(getResources().getDisplayMetrics().widthPixels, px(820)) / dp);
+        int cols = widthDp >= 560 ? 2 : 1;
+        LinearLayout row = null;
         for (int i = 0; i < library.size(); i++) {
-            final int idx = i;
-            Library.Entry e = library.get(i);
-            LinearLayout card = new LinearLayout(this);
-            card.setOrientation(LinearLayout.VERTICAL);
-            card.setPadding(px(16), px(14), px(16), px(14));
-            card.setBackgroundDrawable(box(i == libSel ? 0xFFF0EEFB : Color.WHITE, i == libSel ? ACCENT : LINE, 18));
-            card.addView(text(e.story.title, 22, INK, true));
-            if (e.story.author.length() > 0) card.addView(text("par " + e.story.author, 14, MUTED, false));
-            if (e.story.description.length() > 0) card.addView(text(e.story.description, 16, MUTED, false));
-            card.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { open(idx); } });
-            card.setOnLongClickListener(new View.OnLongClickListener() { public boolean onLongClick(View v) { confirmDelete(idx); return true; } });
-            add(col, card, 12);
+            if (i % cols == 0) {
+                row = new LinearLayout(this);
+                add(col, row, 14);
+            }
+            View card = storyCard(i, (widthDp - 32 - (cols - 1) * 14) / cols);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1);
+            if (i % cols > 0) lp.leftMargin = px(14);
+            row.addView(card, lp);
             if (i == libSel) scrollTo(card);
         }
-        if (!library.isEmpty()) add(col, text("Appui long sur une histoire pour la supprimer.", 13, MUTED, false), 14);
+        if (library.size() % cols != 0) row.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1));
+        add(col, text("Appui long sur une histoire pour la supprimer.", 13, MUTED, false), 16);
+    }
+
+    private View storyCard(final int i, int widthDp) {
+        Library.Entry e = library.get(i);
+        int color = parseColor(e.story.color, ACCENT);
+        boolean sel = i == libSel;
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setBackgroundDrawable(box(Color.WHITE, sel ? color : 0, 22));
+        int pad = sel ? px(3) : 0;
+        card.setPadding(pad, pad, pad, px(14));
+        Bitmap cover = image(e.dir, e.story.cover, px(widthDp));
+        if (cover != null) card.addView(new Views.RoundImage(this, cover, px(20), true));
+        View band = new View(this);
+        band.setBackgroundColor(color);
+        card.addView(band, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, px(6)));
+        TextView title = text(e.story.title, 21, INK, true);
+        title.setPadding(px(14), px(10), px(14), 0);
+        card.addView(title);
+        String sub = e.story.description.length() > 0 ? e.story.description : (e.story.author.length() > 0 ? "par " + e.story.author : "");
+        if (sub.length() > 0) {
+            TextView d = text(sub, 15, MUTED, false);
+            d.setPadding(px(14), px(2), px(14), 0);
+            card.addView(d);
+        }
+        card.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { open(i); } });
+        card.setOnLongClickListener(new View.OnLongClickListener() { public boolean onLongClick(View v) { confirmDelete(i); return true; } });
+        return card;
     }
 
     private void scrollTo(final View v) {
         v.post(new Runnable() {
-            public void run() { scrollParent(v); }
+            public void run() {
+                View p = v;
+                int top = 0;
+                while (p.getParent() instanceof View && !(p.getParent() instanceof ScrollView)) { top += p.getTop(); p = (View) p.getParent(); }
+                if (p.getParent() instanceof ScrollView) ((ScrollView) p.getParent()).smoothScrollTo(0, Math.max(0, top - px(40)));
+            }
         });
-    }
-
-    private void scrollParent(View v) {
-        View p = v;
-        while (p.getParent() instanceof View && !(p.getParent() instanceof ScrollView)) p = (View) p.getParent();
-        if (p.getParent() instanceof ScrollView) ((ScrollView) p.getParent()).smoothScrollTo(0, Math.max(0, v.getTop() - px(40)));
     }
 
     private void confirmDelete(final int i) {
@@ -222,51 +286,112 @@ public class MainActivity extends Activity implements Session.Listener {
 
     private void open(int i) {
         message = "";
+        lastToken = "";
         Library.Entry e = library.get(i);
         session = new Session(e.dir, e.story, this);
         session.restart();
     }
 
+    // ---------------------------------------------------------------- lecture
+
     /** Appelé par la session à chaque changement (nouveau bloc, fin d'un son, surbrillance). */
     public void onChange() {
         if (session == null) return;
         final Session s = session;
-        LinearLayout col = page();
+        int color = parseColor(s.engine.story.color, ACCENT);
+        boolean fresh = !s.engine.token().equals(lastToken);
+        lastToken = s.engine.token();
+        FrameLayout[] overlay = new FrameLayout[1];
+        LinearLayout col = page(color, overlay);
+
         LinearLayout top = new LinearLayout(this);
         top.setGravity(Gravity.CENTER_VERTICAL);
-        TextView back = button("◀", Color.WHITE, INK, new View.OnClickListener() { public void onClick(View v) { closeStory(); } });
-        top.addView(back);
-        TextView title = text("  " + s.engine.story.title, 16, MUTED, true);
+        top.addView(pill("◀", Color.WHITE, INK, new View.OnClickListener() { public void onClick(View v) { closeStory(); } }));
+        TextView title = text("  " + s.engine.story.title, 16, mix(color, INK, 0.4f), true);
         top.addView(title, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         add(col, top, 0);
         String inv = s.inventory();
-        if (inv.length() > 0) add(col, text("Sac : " + inv, 15, 0xFF8B5CF6, true), 8);
+        if (inv.length() > 0) {
+            TextView bag = text((Build.VERSION.SDK_INT >= 19 ? "🎒 " : "Sac : ") + inv, 15, Color.WHITE, true);
+            bag.setBackgroundDrawable(box(VIOLET, 0, 16));
+            bag.setPadding(px(12), px(6), px(12), px(6));
+            LinearLayout wrap = new LinearLayout(this);
+            wrap.addView(bag);
+            add(col, wrap, 10);
+        }
+
+        LinearLayout body = new LinearLayout(this);
+        body.setOrientation(LinearLayout.VERTICAL);
+        int contentWidth = Math.min(getResources().getDisplayMetrics().widthPixels, px(820)) - px(32);
+        Bitmap pic = s.engine.node != null ? image(s.dir, s.engine.node.image, contentWidth) : null;
+        if (pic != null) add(body, new Views.RoundImage(this, pic, px(24), false), 14);
 
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(px(20), px(18), px(20), px(18));
-        card.setBackgroundDrawable(box(Color.WHITE, 0, 22));
+        card.setPadding(px(20), px(16), px(20), px(18));
+        card.setBackgroundDrawable(box(0xF2FFFFFF, 0, 24));
         String end = s.endLabel();
-        if (end != null) card.addView(text(end, 18, ORANGE, true));
-        card.addView(text(s.title() + (s.isPlaying() ? "  ♪" : ""), 26, INK, true));
+        if (end != null) {
+            String k = s.engine.node != null ? s.engine.node.kind : null;
+            int c = "secret".equals(k) ? VIOLET : "sad".equals(k) ? 0xFF3B7FF5 : CHOICE[0];
+            TextView banner = text(("secret".equals(k) ? "★  " : "♥  ") + end, 18, Color.WHITE, true);
+            banner.setBackgroundDrawable(box(c, 0, 14));
+            banner.setPadding(px(14), px(5), px(14), px(5));
+            LinearLayout wrap = new LinearLayout(this);
+            wrap.addView(banner);
+            card.addView(wrap);
+        }
+        LinearLayout titleRow = new LinearLayout(this);
+        titleRow.setGravity(Gravity.CENTER_VERTICAL);
+        titleRow.addView(text(s.title(), 26, mix(color, INK, 0.35f), true), new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        if (s.isPlaying()) titleRow.addView(new Views.Equalizer(this, color));
+        card.addView(titleRow);
         if (s.text().length() > 0) card.addView(text(s.text(), 19, INK, false));
-        add(col, card, 14);
+        add(body, card, 14);
 
         String[] options = s.options();
-        for (int i = 0; i < options.length; i++) {
-            final int idx = i;
-            boolean sel = i == s.selected;
-            add(col, button((i + 1) + "   " + options[i], sel ? ORANGE : Color.WHITE, sel ? Color.WHITE : INK, new View.OnClickListener() {
-                public void onClick(View v) { s.choose(idx); }
-            }), 12);
-        }
+        for (int i = 0; i < options.length; i++) add(body, choiceButton(s, i, options[i]), 12);
         if (options.length == 0 && end == null) {
-            add(col, button("Suivant ▶", ACCENT, Color.WHITE, new View.OnClickListener() { public void onClick(View v) { s.next(); } }), 16);
+            add(body, pill("Suivant  ▶", color, Color.WHITE, new View.OnClickListener() { public void onClick(View v) { s.next(); } }), 16);
         }
         if (end != null) {
-            add(col, button("Rejouer", ACCENT, Color.WHITE, new View.OnClickListener() { public void onClick(View v) { s.restart(); } }), 16);
-            add(col, button("Mes histoires", Color.WHITE, INK, new View.OnClickListener() { public void onClick(View v) { closeStory(); } }), 10);
+            add(body, pill("Rejouer", color, Color.WHITE, new View.OnClickListener() { public void onClick(View v) { s.restart(); } }), 16);
+            add(body, pill("Mes histoires", Color.WHITE, INK, new View.OnClickListener() { public void onClick(View v) { closeStory(); } }), 10);
         }
+        col.addView(body);
+        if (fresh) { // fondu à chaque nouveau moment de l'histoire
+            AlphaAnimation a = new AlphaAnimation(0f, 1f);
+            a.setDuration(350);
+            body.startAnimation(a);
+        }
+        if (fresh && end != null && !"sad".equals(s.engine.node != null ? s.engine.node.kind : null)) {
+            overlay[0].addView(new Views.Confetti(this, "secret".equals(s.engine.node != null ? s.engine.node.kind : null)),
+                new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        }
+    }
+
+    /** Grande réponse colorée avec sa pastille numérotée ; celle qui est surlignée a un contour blanc. */
+    private View choiceButton(final Session s, final int i, String label) {
+        int c = CHOICE[i % CHOICE.length];
+        boolean sel = i == s.selected;
+        LinearLayout b = new LinearLayout(this);
+        b.setGravity(Gravity.CENTER_VERTICAL);
+        GradientDrawable bg = box(c, 0, 32);
+        if (sel) bg.setStroke(px(4), Color.WHITE);
+        b.setBackgroundDrawable(bg);
+        b.setPadding(px(10), px(10), px(18), px(10));
+        TextView num = text(String.valueOf(i + 1), 20, c, true);
+        num.setGravity(Gravity.CENTER);
+        GradientDrawable circle = new GradientDrawable();
+        circle.setShape(GradientDrawable.OVAL);
+        circle.setColor(Color.WHITE);
+        num.setBackgroundDrawable(circle);
+        b.addView(num, new LinearLayout.LayoutParams(px(40), px(40)));
+        TextView t = text(label, 20, Color.WHITE, true);
+        t.setPadding(px(14), 0, 0, 0);
+        b.addView(t, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        b.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { s.choose(i); } });
+        return b;
     }
 
     private void closeStory() {
@@ -296,8 +421,8 @@ public class MainActivity extends Activity implements Session.Listener {
             }
         } else if (library != null && !library.isEmpty()) {
             switch (code) {
-                case KeyEvent.KEYCODE_DPAD_UP: libSel = (libSel + library.size() - 1) % library.size(); showLibrary(); return true;
-                case KeyEvent.KEYCODE_DPAD_DOWN: libSel = (libSel + 1) % library.size(); showLibrary(); return true;
+                case KeyEvent.KEYCODE_DPAD_UP: case KeyEvent.KEYCODE_DPAD_LEFT: libSel = (libSel + library.size() - 1) % library.size(); showLibrary(); return true;
+                case KeyEvent.KEYCODE_DPAD_DOWN: case KeyEvent.KEYCODE_DPAD_RIGHT: libSel = (libSel + 1) % library.size(); showLibrary(); return true;
                 case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: case KeyEvent.KEYCODE_BUTTON_A: case KeyEvent.KEYCODE_BUTTON_X:
                     open(libSel); return true;
             }

@@ -8,6 +8,7 @@ export const soupe: StoryDef = {
   color: '#f28a1c',
   icon: '🥣',
   notion: 'Inventaire et compteur',
+  source: 'le conte populaire européen de la soupe au caillou (Johann Peter Hebel, 1811)',
   items: [
     { id: 'carottes', name: 'Carottes', icon: '🥕' },
     { id: 'patates', name: 'Pommes de terre', icon: '🥔' },

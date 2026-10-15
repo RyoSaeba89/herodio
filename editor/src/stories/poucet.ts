@@ -8,6 +8,7 @@ export const poucet: StoryDef = {
   color: '#22a559',
   icon: '🪨',
   notion: 'Objet nécessaire',
+  source: 'Charles Perrault, « Histoires ou contes du temps passé » (1697)',
   items: [
     { id: 'cailloux', name: 'Cailloux blancs', icon: '🪨' },
     { id: 'pain', name: 'Morceau de pain', icon: '🍞' },

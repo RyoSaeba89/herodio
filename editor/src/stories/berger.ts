@@ -12,6 +12,7 @@ export const berger: StoryDef = {
   color: '#3b7ff5',
   icon: '🐑',
   notion: 'Variable et condition',
+  source: 'Ésope, « Le garçon qui criait au loup »',
   variables: [
     { id: 'confiance', name: 'Confiance du village', initial: 2 },
     { id: 'blagues', name: 'Fausses alertes', initial: 0 },

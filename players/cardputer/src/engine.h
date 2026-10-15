@@ -15,7 +15,7 @@ struct Option { std::string text, audio, next; };
 struct Test { std::string kind, item, var, op, node; int value = 0; };
 
 struct Node {
-    std::string id, type, title, text, audio, kind, op, item, var, next, then_, else_, target;
+    std::string id, type, title, text, audio, image, kind, op, item, var, next, then_, else_, target;
     int value = 0;
     bool reset = false;
     std::vector<Option> options;
@@ -23,7 +23,7 @@ struct Node {
 };
 
 struct Story {
-    std::string id, title, author, description, start;
+    std::string id, title, author, description, start, cover, color;
     std::vector<std::pair<std::string, std::string>> items;   // id, nom
     std::vector<std::pair<std::string, int>> variables;       // id, valeur initiale
     std::vector<Node> nodes;
@@ -47,12 +47,13 @@ inline std::string parse(const char* json, size_t len, Story& s) {
     s = Story();
     s.id = str(doc["id"]); s.title = str(doc["title"]); s.author = str(doc["author"]);
     s.description = str(doc["description"]); s.start = str(doc["start"]);
+    s.cover = str(doc["cover"]); s.color = str(doc["color"]);
     for (JsonObjectConst i : doc["items"].as<JsonArrayConst>()) s.items.push_back({str(i["id"]), str(i["name"])});
     for (JsonObjectConst v : doc["variables"].as<JsonArrayConst>()) s.variables.push_back({str(v["id"]), v["initial"] | 0});
     for (JsonObjectConst j : doc["nodes"].as<JsonArrayConst>()) {
         Node n;
         n.id = str(j["id"]); n.type = str(j["type"]); n.title = str(j["title"]); n.text = str(j["text"]);
-        n.audio = str(j["audio"]); n.kind = str(j["kind"]); n.op = str(j["op"]); n.item = str(j["item"]);
+        n.audio = str(j["audio"]); n.image = str(j["image"]); n.kind = str(j["kind"]); n.op = str(j["op"]); n.item = str(j["item"]);
         n.var = str(j["var"]); n.value = j["value"] | 0; n.next = str(j["next"]); n.then_ = str(j["then"]);
         n.else_ = str(j["else"]); n.target = str(j["target"]); n.reset = j["reset"] | false;
         for (JsonObjectConst o : j["options"].as<JsonArrayConst>()) n.options.push_back({str(o["text"]), str(o["audio"]), str(o["next"])});

@@ -2,6 +2,7 @@
 // Chaque son multipiste est mixé ici, une fois pour toutes : les lecteurs n'ont qu'un seul fichier à lire à la fois.
 import { strToU8, zipSync, type Zippable } from 'fflate';
 import { autoVoiceSlots, withAutoVoices } from '../audio/autovoice';
+import { VOICE_CREDIT } from '../audio/tts';
 import { rasterize } from '../audio/images';
 import { getBlob } from '../audio/media';
 import { encodeWav, renderSound } from '../audio/mixer';
@@ -93,6 +94,7 @@ export async function buildPack(p: Project, pf: Platform, progress: (done: numbe
     cover: p.cover ? images.get(p.cover) ?? null : null,
     color: p.color,
     duration: Math.round(unique.reduce((a, u) => a + soundDuration(u.sound), 0)),
+    credits: [...new Set([...(p.credits ?? []), ...(p.autoVoice ? [VOICE_CREDIT] : [])])],
     created: new Date().toISOString(), generator: 'Herodio Studio',
   };
   const root = pf.output === 'sd' ? `herodio/${slug(p.title)}-${p.id.slice(0, 4)}/` : '';

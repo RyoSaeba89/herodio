@@ -4,6 +4,7 @@ import { decode, putBlob } from '../audio/media';
 import {
   newBlock, newProject, uid, type Block, type ChoiceBlock, type Clip, type Media, type MediaCategory, type Project, type Sound, type Track,
 } from '../model/project';
+import { VOICE_CREDIT } from '../audio/tts';
 import { imagesOf, narrationTexts, soundsOf, textHash, type Def, type Media as NodeMedia, type StoryDef } from './dsl';
 
 /** Média déjà enregistré : identifiant et durée (0 pour une image). */
@@ -46,6 +47,11 @@ export function projectFromDef(def: StoryDef, assets: Assets): Project {
   p.items = def.items ?? [];
   p.variables = def.variables ?? [];
   p.cover = assets('image', 'couverture')?.id ?? null;
+  p.credits = [
+    ...(def.source ? [`D’après ${def.source} (domaine public), adaptation Herodio`] : []),
+    VOICE_CREDIT,
+    'Illustrations, bruitages et musiques : Herodio (CC0)',
+  ];
   const bid = (key: string) => `${def.id}-${key}`;
   const start = p.blocks[0];
   if (start.type === 'start') start.next = bid(def.start);

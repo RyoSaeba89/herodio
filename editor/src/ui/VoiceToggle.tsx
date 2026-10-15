@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { playSound } from '../audio/player';
-import { autoSound, ttsInstalled, VOICE_LABEL } from '../audio/tts';
+import { autoSound, ttsInstalled, VOICE_CREDIT, VOICE_LABEL } from '../audio/tts';
 import { useStore } from '../store';
 
 /** Réglage « Voix automatique » d'une histoire (désactivé par défaut). */
@@ -31,7 +31,7 @@ export function VoiceToggle() {
       {installed && (
         <div className="row">
           <button className="btn" onClick={tryVoice} disabled={trying}>{trying ? '⏳ Un instant…' : '▶ Écouter la voix'}</button>
-          <span className="hint">{VOICE_LABEL}</span>
+          <span className="hint" title={VOICE_CREDIT}>{VOICE_LABEL}</span>
         </div>
       )}
     </div>

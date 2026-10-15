@@ -29,7 +29,7 @@ public final class Engine {
     }
 
     public static final class Node {
-        public String id, type, title = "", text = "", audio, kind, op, item, var, next, then, otherwise, target;
+        public String id, type, title = "", text = "", audio, image, kind, op, item, var, next, then, otherwise, target;
         public int value;
         public boolean reset;
         public Option[] options = new Option[0];
@@ -37,7 +37,7 @@ public final class Engine {
     }
 
     public static final class Story {
-        public String id, title, author, description, start;
+        public String id, title, author, description, start, cover, color;
         public final List<String[]> items = new ArrayList<String[]>();      // {id, nom}
         public final List<Object[]> variables = new ArrayList<Object[]>();  // {id, nom, valeur initiale}
         public final List<Node> nodes = new ArrayList<Node>();
@@ -64,6 +64,8 @@ public final class Engine {
         s.author = o.isNull("author") ? "" : o.optString("author");
         s.description = o.isNull("description") ? "" : o.optString("description");
         s.start = str(o, "start");
+        s.cover = str(o, "cover");
+        s.color = str(o, "color");
         JSONArray a = o.optJSONArray("items");
         for (int i = 0; a != null && i < a.length(); i++) {
             JSONObject it = a.getJSONObject(i);
@@ -83,6 +85,7 @@ public final class Engine {
             n.title = j.isNull("title") ? "" : j.optString("title");
             n.text = j.isNull("text") ? "" : j.optString("text");
             n.audio = str(j, "audio");
+            n.image = str(j, "image");
             n.kind = str(j, "kind");
             n.op = str(j, "op");
             n.item = str(j, "item");

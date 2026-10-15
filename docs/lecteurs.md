@@ -92,7 +92,7 @@ Compilation : `cd players/android && python build.py`. Il faut un JDK et le SDK 
    ```
 
    Si le téléversement ne démarre pas, maintenir le bouton **G0** en branchant le câble.
-3. Insérer la carte et allumer.
+3. Insérer la carte et allumer. La bibliothèque affiche la couverture de chaque histoire ; on change d'histoire avec `;` `.` et on l'écoute avec `OK`.
 
 | Touche | Action |
 |---|---|
@@ -102,6 +102,7 @@ Compilation : `cd players/android && python build.py`. Il faut un JDK et le SDK 
 | `Del` | revenir à la bibliothèque |
 | `r` | recommencer |
 | `i` | afficher le sac |
+| `t` | basculer entre l'illustration et le texte |
 | `-` `=` | volume |
 
 Le son sort par le haut-parleur, ou par la prise casque sur l'ADV.

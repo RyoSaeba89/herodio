@@ -26,6 +26,8 @@ export interface StoryDef {
   color: string;
   icon: string;
   notion: string;
+  /** Œuvre d'origine (domaine public) dont l'histoire est adaptée. */
+  source?: string;
   /** Niveau d'interface à l'ouverture (par défaut : avancé, car la plupart utilisent la logique). */
   level?: 'decouverte' | 'avance';
   items?: { id: string; name: string; icon: string }[];

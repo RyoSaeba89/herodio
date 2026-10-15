@@ -8,6 +8,7 @@ export const lievre: StoryDef = {
   color: '#14b0a6',
   icon: '🐢',
   notion: 'Compteur et remise à zéro',
+  source: 'Jean de La Fontaine, « Le Lièvre et la Tortue », Fables VI, 10 (1668)',
   variables: [{ id: 'avance', name: 'Avance de la Tortue', initial: 0 }],
   start: 'pari',
   nodes: {

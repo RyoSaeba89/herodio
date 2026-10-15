@@ -8,6 +8,7 @@ export const cochons: StoryDef = {
   color: '#e64aa0',
   icon: '🐷',
   notion: 'Boucle et condition',
+  source: 'Joseph Jacobs, « English Fairy Tales » (1890)',
   variables: [{ id: 'rangs', name: 'Rangées de briques', initial: 0 }],
   start: 'debut',
   nodes: {

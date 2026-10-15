@@ -7,6 +7,8 @@ import { encodeWav } from './mixer';
 
 export const VOICE = 'fr_FR-siwis-medium';
 export const VOICE_LABEL = 'Siwis (Piper, synthèse vocale libre)';
+/** Attribution exigée par la licence des données de la voix (CC BY 4.0). */
+export const VOICE_CREDIT = 'Voix de synthèse : Piper « fr_FR-siwis-medium », données SIWIS (Université d’Édimbourg), licence CC BY 4.0';
 /** Un peu plus lent que la normale : plus facile à suivre pour un enfant de 6-8 ans. */
 const RATE = 1.08;
 

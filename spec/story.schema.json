@@ -4,43 +4,394 @@
   "title": "Histoire Herodio exécutable (story.json), version 1",
   "description": "Format lu par tous les lecteurs. Les règles d'exécution sont décrites dans docs/moteur.md.",
   "type": "object",
-  "required": ["format", "version", "id", "title", "start", "nodes"],
+  "required": [
+    "format",
+    "version",
+    "id",
+    "title",
+    "start",
+    "nodes"
+  ],
   "properties": {
-    "format": { "const": "herodio-story" },
-    "version": { "const": 1 },
-    "id": { "type": "string" },
-    "title": { "type": "string" },
-    "author": { "type": "string" },
-    "description": { "type": "string" },
-    "start": { "type": ["string", "null"], "description": "Identifiant du premier bloc joué" },
-    "items": { "type": "array", "items": { "type": "object", "required": ["id", "name"], "properties": { "id": { "type": "string" }, "name": { "type": "string" } } } },
-    "variables": { "type": "array", "items": { "type": "object", "required": ["id", "initial"], "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "initial": { "type": "integer" } } } },
-    "nodes": { "type": "array", "items": { "$ref": "#/$defs/node" } }
+    "format": {
+      "const": "herodio-story"
+    },
+    "version": {
+      "const": 1
+    },
+    "id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "start": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Identifiant du premier bloc joué"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "initial"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "initial": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "cover": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Image de couverture (JPEG dans le pack), facultative"
+    },
+    "color": {
+      "type": "string",
+      "description": "Couleur d'ambiance « #rrggbb », facultative"
+    }
   },
   "$defs": {
-    "ref": { "type": ["string", "null"], "description": "Identifiant d'un bloc ; null ou inconnu = fin de l'histoire" },
-    "audio": { "type": ["string", "null"], "description": "Chemin relatif d'un WAV PCM 16 bits mono dans le pack (ex. assets/audio/001.wav)" },
+    "ref": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Identifiant d'un bloc ; null ou inconnu = fin de l'histoire"
+    },
+    "audio": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Chemin relatif d'un WAV PCM 16 bits mono dans le pack (ex. assets/audio/001.wav)"
+    },
     "test": {
       "oneOf": [
-        { "type": "object", "required": ["kind", "item"], "properties": { "kind": { "const": "item" }, "item": { "type": "string" } } },
-        { "type": "object", "required": ["kind", "var", "op", "value"], "properties": { "kind": { "const": "var" }, "var": { "type": "string" }, "op": { "enum": ["==", "!=", "<", "<=", ">", ">="] }, "value": { "type": "integer" } } },
-        { "type": "object", "required": ["kind", "node"], "properties": { "kind": { "const": "visited" }, "node": { "type": "string" } } }
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "item"
+          ],
+          "properties": {
+            "kind": {
+              "const": "item"
+            },
+            "item": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "var",
+            "op",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "var"
+            },
+            "var": {
+              "type": "string"
+            },
+            "op": {
+              "enum": [
+                "==",
+                "!=",
+                "<",
+                "<=",
+                ">",
+                ">="
+              ]
+            },
+            "value": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "node"
+          ],
+          "properties": {
+            "kind": {
+              "const": "visited"
+            },
+            "node": {
+              "type": "string"
+            }
+          }
+        }
       ]
     },
     "node": {
       "type": "object",
-      "required": ["id", "type"],
-      "properties": { "id": { "type": "string" }, "type": { "enum": ["scene", "choice", "end", "item", "var", "cond", "jump"] } },
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "scene",
+            "choice",
+            "end",
+            "item",
+            "var",
+            "cond",
+            "jump"
+          ]
+        }
+      },
       "oneOf": [
-        { "properties": { "type": { "const": "scene" }, "title": { "type": "string" }, "text": { "type": "string" }, "audio": { "$ref": "#/$defs/audio" }, "next": { "$ref": "#/$defs/ref" } }, "required": ["next"] },
-        { "properties": { "type": { "const": "choice" }, "title": { "type": "string" }, "text": { "type": "string" }, "audio": { "$ref": "#/$defs/audio" },
-            "options": { "type": "array", "items": { "type": "object", "required": ["next"], "properties": { "text": { "type": "string" }, "audio": { "$ref": "#/$defs/audio" }, "next": { "$ref": "#/$defs/ref" } } } } }, "required": ["options"] },
-        { "properties": { "type": { "const": "end" }, "kind": { "enum": ["happy", "sad", "secret", "other"] }, "title": { "type": "string" }, "text": { "type": "string" }, "audio": { "$ref": "#/$defs/audio" } }, "required": ["kind"] },
-        { "properties": { "type": { "const": "item" }, "op": { "enum": ["give", "take"] }, "item": { "type": "string" }, "next": { "$ref": "#/$defs/ref" } }, "required": ["op", "item", "next"] },
-        { "properties": { "type": { "const": "var" }, "op": { "enum": ["set", "add"] }, "var": { "type": "string" }, "value": { "type": "integer" }, "next": { "$ref": "#/$defs/ref" } }, "required": ["op", "var", "value", "next"] },
-        { "properties": { "type": { "const": "cond" }, "test": { "$ref": "#/$defs/test" }, "then": { "$ref": "#/$defs/ref" }, "else": { "$ref": "#/$defs/ref" } }, "required": ["test", "then", "else"] },
-        { "properties": { "type": { "const": "jump" }, "target": { "$ref": "#/$defs/ref" }, "reset": { "type": "boolean" } }, "required": ["target", "reset"] }
+        {
+          "properties": {
+            "type": {
+              "const": "scene"
+            },
+            "title": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "audio": {
+              "$ref": "#/$defs/audio"
+            },
+            "next": {
+              "$ref": "#/$defs/ref"
+            },
+            "image": {
+              "$ref": "#/$defs/image"
+            }
+          },
+          "required": [
+            "next"
+          ]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "choice"
+            },
+            "title": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "audio": {
+              "$ref": "#/$defs/audio"
+            },
+            "options": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "next"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  },
+                  "audio": {
+                    "$ref": "#/$defs/audio"
+                  },
+                  "next": {
+                    "$ref": "#/$defs/ref"
+                  }
+                }
+              }
+            },
+            "image": {
+              "$ref": "#/$defs/image"
+            }
+          },
+          "required": [
+            "options"
+          ]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "end"
+            },
+            "kind": {
+              "enum": [
+                "happy",
+                "sad",
+                "secret",
+                "other"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            },
+            "audio": {
+              "$ref": "#/$defs/audio"
+            },
+            "image": {
+              "$ref": "#/$defs/image"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "item"
+            },
+            "op": {
+              "enum": [
+                "give",
+                "take"
+              ]
+            },
+            "item": {
+              "type": "string"
+            },
+            "next": {
+              "$ref": "#/$defs/ref"
+            }
+          },
+          "required": [
+            "op",
+            "item",
+            "next"
+          ]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "var"
+            },
+            "op": {
+              "enum": [
+                "set",
+                "add"
+              ]
+            },
+            "var": {
+              "type": "string"
+            },
+            "value": {
+              "type": "integer"
+            },
+            "next": {
+              "$ref": "#/$defs/ref"
+            }
+          },
+          "required": [
+            "op",
+            "var",
+            "value",
+            "next"
+          ]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "cond"
+            },
+            "test": {
+              "$ref": "#/$defs/test"
+            },
+            "then": {
+              "$ref": "#/$defs/ref"
+            },
+            "else": {
+              "$ref": "#/$defs/ref"
+            }
+          },
+          "required": [
+            "test",
+            "then",
+            "else"
+          ]
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "jump"
+            },
+            "target": {
+              "$ref": "#/$defs/ref"
+            },
+            "reset": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "target",
+            "reset"
+          ]
+        }
       ]
+    },
+    "image": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Illustration : chemin relatif d'un JPEG de base dans le pack (ex. assets/images/001.jpg)"
     }
   }
 }

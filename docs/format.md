@@ -14,7 +14,7 @@ Les deux fichiers sont des archives ZIP ordinaires : on peut les ouvrir avec n'i
 
 ```
 project.json        format "herodio-project", version 1
-media/<id>.<ext>    sons d'origine (enregistrements webm/opus, imports wav/mp3/ogg…), jamais modifiés
+media/<id>.<ext>    sons et images d'origine (webm/opus, wav, mp3, ogg… ; png, jpeg, webp, svg…), jamais modifiés
 ```
 
 `project.json` conserve **toutes** les informations d'édition :
@@ -41,8 +41,9 @@ Les sons sont toujours référencés par un **identifiant stable**, jamais par u
 
 ```
 story.json              histoire exécutable (schéma : spec/story.schema.json)
-metadata.json           format "herodio-pack", version, titre, auteur, plateforme, format audio, durée…
+metadata.json           format "herodio-pack", version, titre, auteur, plateforme, format audio, durée, couverture, couleur, crédits…
 assets/audio/001.wav    un fichier par son, déjà mixé : WAV PCM 16 bits mono
+assets/images/001.jpg   illustrations et couverture : JPEG de base (non progressif), à la taille de l'appareil
 ```
 
 - `story.json` est **identique pour toutes les plateformes**. Seul l'audio change, selon le profil d'export :
@@ -52,6 +53,18 @@ assets/audio/001.wav    un fichier par son, déjà mixé : WAV PCM 16 bits mono
   | Windows, Android, Raspberry Pi | 44,1 kHz |
   | Android 2.3 | 22,05 kHz |
   | Cardputer | 16 kHz |
+
+- Champs facultatifs, ignorés par un lecteur qui ne les connaît pas (le format reste en version 1) :
+  - `image` sur les scènes, les choix et les fins ;
+  - `cover` (couverture) et `color` (couleur d'ambiance « #rrggbb ») sur l'histoire.
+- Taille des images selon l'appareil :
+
+  | Plateforme | Taille |
+  |---|---|
+  | Windows et Android | 1280 × 960 au plus |
+  | Raspberry Pi | 1024 × 768 |
+  | Android 2.3 | 640 × 480 |
+  | Cardputer | exactement 240 × 135 (recadrée) |
 
 - Les identifiants de blocs de `story.json` sont ceux de l'éditeur. Les traces de jeu se comparent donc d'une plateforme à l'autre.
 - Deux emplacements qui ont exactement le même mixage partagent le même fichier.

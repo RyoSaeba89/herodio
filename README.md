@@ -16,14 +16,28 @@ Tout fonctionne **hors ligne**, sans compte et sans abonnement.
   - plus fort / moins fort, volume idéal (normalisation), apparition et disparition progressives, fondu enchaîné ;
   - pistes voix, ambiance et bruitage, avec muet, solo et volume ;
   - baisse automatique de l'ambiance quand quelqu'un parle (ducking).
-- **Bibliothèque de sons** : import WAV, MP3, OGG, FLAC ou M4A ; catégories ; préécoute ; glisser un son sur un bloc ; repérage des sons inutilisés.
+- **Bibliothèque de sons et d'images** : import WAV, MP3, OGG, FLAC ou M4A, et PNG, JPEG, WebP ou SVG ; catégories ; préécoute ; glisser un son ou une image sur un bloc ; repérage des médias inutilisés.
+- **Illustrations** : chaque scène, question ou fin peut avoir son image. L'histoire a aussi une couverture et une couleur. À l'export, les images sont converties en JPEG à la bonne taille pour chaque appareil (240 × 135 pour le Cardputer).
+- **Voix automatique** (désactivée par défaut) :
+  - une voix de synthèse **libre et hors ligne** lit à voix haute les textes qui n'ont pas encore d'enregistrement : scènes, questions et réponses ;
+  - elle repose sur [Piper](https://github.com/rhasspy/piper), voix française « Siwis » ;
+  - elle fonctionne dans la prévisualisation et elle est intégrée aux sons à l'export : **tous** les lecteurs en profitent, même Android 2.3 et le Cardputer ;
+  - le bouton 🗣️ d'un bloc la transforme en vraie prise, modifiable dans le studio.
 - **« Jouer mon histoire »** avec le même moteur que les lecteurs :
   - le bloc en cours est mis en évidence et le chemin parcouru est surligné ;
   - le sac et les compteurs sont affichés ;
   - on peut jouer à partir de n'importe quel bloc, avec un état de départ choisi.
 - **Vérification** en langage d'enfant : début manquant, flèche manquante, bloc jamais atteint, impasse, boucle infinie, objet jamais donné, son introuvable…
 - **Export en un clic** vers 5 plateformes, avec estimation de la taille et conseils propres à chaque appareil.
-- **3 exemples** : *Ma première histoire*, *Le château mystérieux* (clé, porte verrouillée, fin secrète) et *La forêt enchantée* (narration, bruitages, musique).
+- **8 histoires fournies**, toutes narrées, illustrées et sonorisées :
+  - 3 pour apprendre l'outil : *Ma première histoire*, *Le château mystérieux*, *La forêt enchantée* ;
+  - 5 contes du patrimoine pour les **6-8 ans**, étudiés puis adaptés en histoires interactives : *Les trois petits cochons*, *La soupe au caillou*, *Le Petit Poucet*, *Le petit berger et le loup*, *Le Lièvre et la Tortue*. L'étude et les choix d'adaptation sont dans [docs/histoires/analyse.md](docs/histoires/analyse.md).
+- **Lecteurs illustrés et colorés** :
+  - bibliothèque en cartes avec couverture ;
+  - grande illustration et fond aux couleurs de l'histoire ;
+  - réponses en grosses pastilles colorées et numérotées, la réponse surlignée étant lue à voix haute ;
+  - fondu entre les scènes ;
+  - confettis (fin heureuse) ou pluie d'étoiles (fin secrète).
 
 ## État du projet
 
@@ -35,8 +49,9 @@ Ce tableau distingue ce qui est écrit, compilé et testé :
 | Moteur TypeScript (référence) | ✅ | ✅ | ✅ conformité |
 | Lecteur Windows (Rust) | ✅ | ✅ | ✅ conformité, partie complète automatisée, rendu de la fenêtre vérifié par capture ; ⚠️ son et clavier non essayés à la main |
 | Lecteur Linux / Raspberry Pi (Rust) | ✅ | ✅ x86_64 Linux (WSL) ; vérification de compilation pour aarch64 | ⚠️ tests passés sur Linux x86_64 ; **à valider sur un vrai Raspberry Pi** |
-| Lecteur Android 2.3 → 14 (Java) | ✅ | ✅ APK signé v1+v2, compilé contre l'API 9 | ✅ émulateurs Android 2.3.7, 5.1 et 14 (import, lecture WAV, D-pad, clavier, toucher, histoire complète) ; **à valider sur un vrai Xperia Play** |
-| Firmware Cardputer / ADV (C++) | ✅ | ✅ PlatformIO (ESP32-S3) | ✅ conformité du moteur sur PC ; **à valider sur l'appareil** (écran, clavier, son, carte SD) |
+| Lecteur Android 2.3 → 14 (Java) | ✅ | ✅ APK signé v1+v2, compilé contre l'API 9 | ✅ émulateurs Android 2.3.7, 5.1 et 14 (import, lecture WAV, illustrations, D-pad, clavier, toucher, histoires complètes, confettis) ; **à valider sur un vrai Xperia Play** |
+| Firmware Cardputer / ADV (C++) | ✅ | ✅ PlatformIO (ESP32-S3) | ✅ conformité du moteur sur PC ; **à valider sur l'appareil** (écran, illustrations JPEG, clavier, son, carte SD) |
+| Voix automatique (Piper / Siwis, dans l'éditeur) | ✅ | ✅ | ✅ synthèse, cache, prévisualisation, prises et export testés dans Edge ; 8 s de parole calculées en 2 s environ |
 
 ## Architecture
 
@@ -56,7 +71,8 @@ spec/
   story.schema.json   schéma du format exécutable
   conformance/        tests partagés par les 4 moteurs
 docs/              formats, moteur, installation des lecteurs
-tools/             génération des sons d'exemple
+tools/             génération des bruitages et musiques (gen_sons.py) et des illustrations (illustrations/)
+editor/scripts/    installation de la voix (setup-tts.mjs) et narration des histoires fournies (gen-narration.mjs)
 ```
 
 **Principe clé** : la plateforme partage le **format de données** et les **règles du moteur**, pas le code. Chaque lecteur est natif de son appareil : Java 6 pour Android 2.3, C++ pour l'ESP32, Rust pour le PC. Les mêmes tests de conformité garantissent qu'à état égal, une histoire prend les mêmes décisions partout. Voir [docs/moteur.md](docs/moteur.md).
@@ -98,5 +114,6 @@ Tests de bout en bout (Edge, sans fenêtre visible) : lancer `npm run dev`, puis
 ## Licences
 
 - Code : MIT.
-- Bruitages et musique des exemples : générés par `tools/gen_example_audio.py`, domaine public (CC0).
-- **Narration des exemples** : synthèse vocale Windows (voix « Microsoft Hortense »), générée localement. Avant toute diffusion publique, il vaut mieux la remplacer par de vraies voix enregistrées, car les conditions de redistribution de ces voix ne sont pas claires.
+- Histoires fournies (adaptations), illustrations, bruitages et musiques : créations Herodio, CC0. Les contes d'origine sont du domaine public.
+- **Voix « Siwis »** (voix automatique et narration des histoires fournies) : modèle Piper `fr_FR-siwis-medium`, entraîné sur les données SIWIS, licence **CC BY 4.0**. L'attribution est ajoutée automatiquement dans le `metadata.json` des packs.
+- Moteur de synthèse : onnxruntime-web (MIT) et piper_phonemize (MIT), qui contient les données d'espeak-ng (**GPL-3**). C'est un composant séparé, chargé depuis `editor/public/tts/vendor/`.

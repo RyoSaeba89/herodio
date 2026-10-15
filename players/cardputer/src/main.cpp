@@ -1,9 +1,9 @@
 // Lecteur Herodio pour M5Stack Cardputer / Cardputer ADV.
 // Les histoires sont copiées sur la carte microSD dans /herodio/<histoire>/ (export « Cardputer ADV » d'Herodio Studio).
 // Le son est prémixé à l'export (WAV PCM 16 bits mono) : un seul flux lu en continu depuis la carte.
-#include <M5Cardputer.h>
 #include <SD.h>
 #include <SPI.h>
+#include <M5Cardputer.h>
 #include "engine.h"
 
 using namespace herodio;
@@ -81,14 +81,14 @@ static AudioStream audio;
 
 // ------------------------------------------------------------------ état
 
-struct Entry { std::string dir, title; };
+struct Entry { std::string dir, title, cover, color; };
 static std::vector<Entry> library;
 static int libSel = 0;
 static Story story;
 static Engine* engine = nullptr;
 static std::string storyDir;
 static int sel = 0;
-static bool scenePlaying = false, showInventory = false, dirty = true, sdOk = false;
+static bool scenePlaying = false, showInventory = false, showText = false, dirty = true, sdOk = false;
 static std::string message;
 static uint8_t volume = 160;
 
@@ -122,6 +122,33 @@ static int drawWrapped(const std::string& text, int x, int y, int w, int maxY, i
     return y;
 }
 
+/// Couleur « #rrggbb » de l'histoire, ou la couleur par défaut.
+static uint16_t storyColor(const std::string& hex) {
+    if (hex.size() != 7 || hex[0] != '#') return C_ACCENT;
+    long v = strtol(hex.c_str() + 1, nullptr, 16);
+    return canvas.color565((v >> 16) & 255, (v >> 8) & 255, v & 255);
+}
+
+/// Affiche une illustration du pack (JPEG 240×135 préparé à l'export). Renvoie faux si elle manque.
+static bool drawImage(const std::string& dir, const std::string& rel) {
+    if (rel.empty() || rel.find("..") != std::string::npos) return false;
+    std::string path = dir + "/" + rel;
+    if (!SD.exists(path.c_str())) return false;
+    return canvas.drawJpgFile(SD, path.c_str(), 0, 0);
+}
+
+/// Bandeau coloré en bas de l'écran, par-dessus l'illustration.
+static void band(uint16_t color, const std::string& title, const char* small) {
+    canvas.fillRect(0, 103, 240, 32, color);
+    canvas.setFont(&fonts::efontJA_14_b);
+    canvas.setTextColor(C_WHITE);
+    canvas.drawString(title.c_str(), 6, 105);
+    canvas.setFont(&fonts::efontJA_10);
+    canvas.drawString(small, 6, 123);
+}
+
+const char* endLabel(const std::string& k);
+
 static void hint(const char* s) {
     canvas.setFont(&fonts::efontJA_10);
     canvas.setTextColor(C_MUTED);
@@ -130,6 +157,15 @@ static void hint(const char* s) {
 
 static void drawLibrary() {
     canvas.fillScreen(C_BG);
+    if (sdOk && !library.empty()) {
+        const Entry& e = library[libSel];
+        uint16_t c = storyColor(e.color);
+        if (!drawImage(e.dir, e.cover)) canvas.fillScreen(c);
+        std::string pos = "< " + std::to_string(libSel + 1) + "/" + std::to_string(library.size()) + " >   OK : écouter";
+        band(c, e.title, pos.c_str());
+        if (!message.empty()) { canvas.fillRect(0, 0, 240, 16, C_ORANGE); canvas.setTextColor(C_WHITE); canvas.setFont(&fonts::efontJA_12); canvas.drawString(message.c_str(), 4, 1); }
+        return;
+    }
     canvas.fillRect(0, 0, 240, 18, C_ACCENT);
     canvas.setFont(&fonts::efontJA_14_b);
     canvas.setTextColor(C_WHITE);
@@ -153,7 +189,7 @@ static void drawLibrary() {
     hint(";/. choisir   OK écouter   -/= volume");
 }
 
-static const char* endLabel(const std::string& k) {
+const char* endLabel(const std::string& k) {
     if (k == "happy") return "Fin heureuse";
     if (k == "sad") return "Fin triste";
     if (k == "secret") return "Fin secrète !";
@@ -162,12 +198,27 @@ static const char* endLabel(const std::string& k) {
 
 static void drawPlay() {
     canvas.fillScreen(C_BG);
+    const Node* cur = engine->node;
+    uint16_t color = storyColor(story.color);
+    bool picture = cur && !showText && !showInventory && (cur->type == "scene" || cur->type == "end") && drawImage(storyDir, cur->image);
+    if (picture) {
+        std::string t = cur->title + (audio.active ? "  ♪" : "");
+        band(color, t, engine->status != PLAYING ? "OK : rejouer   t : texte   Del : menu" : "OK : suivant   t : texte   Del : menu");
+        if (engine->status != PLAYING) {
+            canvas.fillRoundRect(4, 4, 120, 18, 6, cur->kind == "secret" ? C_VIOLET : C_ORANGE);
+            canvas.setFont(&fonts::efontJA_12);
+            canvas.setTextColor(C_WHITE);
+            canvas.drawString(endLabel(cur->kind), 10, 6);
+        }
+        return;
+    }
+    canvas.fillRect(0, 0, 240, 12, color);
     canvas.setFont(&fonts::efontJA_10);
-    canvas.setTextColor(C_MUTED);
+    canvas.setTextColor(C_WHITE);
     canvas.drawString(story.title.c_str(), 4, 1);
     if (!engine->items.empty()) {
         std::string s = "Sac: " + std::to_string(engine->items.size()) + " (i)";
-        canvas.setTextColor(C_VIOLET);
+        canvas.setTextColor(C_WHITE);
         canvas.drawRightString(s.c_str(), 236, 1);
     }
     const Node* n = engine->node;
@@ -208,7 +259,7 @@ static void drawPlay() {
     }
     if (engine->status != PLAYING) hint("OK rejouer   Del menu");
     else if (nopt) hint(";/. choisir  OK valider  Del menu");
-    else hint("OK suivant   r recommencer   Del menu");
+    else hint("OK suivant   t image   Del menu");
 }
 
 static void render() {
@@ -230,7 +281,9 @@ static void scanLibrary() {
         if (!f) continue;
         JsonDocument filter, doc;
         filter["title"] = true;
-        if (!deserializeJson(doc, f, DeserializationOption::Filter(filter))) library.push_back({dir, doc["title"] | d.name()});
+        filter["cover"] = true;
+        filter["color"] = true;
+        if (!deserializeJson(doc, f, DeserializationOption::Filter(filter))) library.push_back({dir, doc["title"] | d.name(), doc["cover"] | "", doc["color"] | ""});
         f.close();
     }
     std::sort(library.begin(), library.end(), [](const Entry& a, const Entry& b) { return a.title < b.title; });
@@ -240,6 +293,7 @@ static void scanLibrary() {
 static void enter() {
     sel = 0;
     showInventory = false;
+    showText = false;
     const Node* n = engine->node;
     scenePlaying = false;
     audio.stop();
@@ -349,6 +403,7 @@ void loop() {
                 if (engine->status == PLAYING && n->type == "choice" && c - '1' < (int)n->options.size()) { engine->choose(c - '1'); enter(); }
             } else if (engine && c == 'r') { engine->start(); enter(); }
             else if (engine && c == 'i') { showInventory = !showInventory; dirty = true; }
+            else if (engine && c == 't') { showText = !showText; dirty = true; }
         }
     }
 
