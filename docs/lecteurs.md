@@ -38,6 +38,22 @@ sudo cp target/release/herodio-player /usr/local/bin/
 mkdir -p ~/Herodio/histoires                    # copier ici les fichiers .aistory
 ```
 
+### Compilation croisée depuis un PC (Ubuntu ou WSL)
+
+Plus rapide que sur un Pi Zero ; le binaire obtenu sert aux Pi 3, 4, 5 et Zero 2 en système 64 bits.
+
+```sh
+sudo dpkg --add-architecture arm64   # puis ajouter ports.ubuntu.com pour arm64 aux sources apt
+sudo apt install -y gcc-aarch64-linux-gnu libasound2-dev:arm64
+rustup target add aarch64-unknown-linux-gnu
+export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc \
+       PKG_CONFIG_ALLOW_CROSS=1 PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
+cd players/desktop && cargo build --release --target aarch64-unknown-linux-gnu
+# → target/aarch64-unknown-linux-gnu/release/herodio-player, à copier dans /usr/local/bin/ du Pi
+```
+
+Avec `qemu-user` installé, `CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUNNER="qemu-aarch64 -L /usr/aarch64-linux-gnu" cargo test --target aarch64-unknown-linux-gnu` lance les tests sur PC.
+
 La bibliothèque est `~/Herodio/histoires`. On peut la changer avec la variable `HERODIO_HISTOIRES`.
 
 ### Démarrage automatique (facultatif)

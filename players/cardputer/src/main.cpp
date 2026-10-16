@@ -161,6 +161,8 @@ static void drawLibrary() {
         const Entry& e = library[libSel];
         uint16_t c = storyColor(e.color);
         if (!drawImage(e.dir, e.cover)) canvas.fillScreen(c);
+        // Le recadrage 4:3 → écran large coupe le liseré de la couverture : on le redessine en entier.
+        for (int i = 0; i < 6; i++) canvas.drawRoundRect(i, i, 240 - 2 * i, 135 - 2 * i, 11 - i, c);
         std::string pos = "< " + std::to_string(libSel + 1) + "/" + std::to_string(library.size()) + " >   OK : écouter";
         band(c, e.title, pos.c_str());
         if (!message.empty()) { canvas.fillRect(0, 0, 240, 16, C_ORANGE); canvas.setTextColor(C_WHITE); canvas.setFont(&fonts::efontJA_12); canvas.drawString(message.c_str(), 4, 1); }
