@@ -6,7 +6,7 @@ Herodio lets a child (roughly 7 to 14 years old), a teacher or a youth leader **
 
 Everything works **offline**, with no account and no subscription.
 
-> **Version 0.2.1-alpha**: a test version, in French and English. The Studio and the PC and Android players are tested; the Cardputer, a real Raspberry Pi and a real Xperia Play have not been tried on the device yet (see [Project status](#project-status)).
+> **Version 0.2.2-alpha**: a test version, in French and English. The Studio and the PC and Android players are tested; the Cardputer and a real Raspberry Pi have not been tried on the device yet; first tries on a real Xperia Play and a smartphone led to the Android fixes in 0.2.2, to be checked again on the device (see [Project status](#project-status)).
 
 ## Download
 
@@ -73,7 +73,7 @@ This table separates what is written, built and tested:
 | TypeScript engine (reference) | ✅ | ✅ | ✅ conformance |
 | Windows player (Rust) | ✅ | ✅ | ✅ conformance, full automated play-through, window rendering checked by screenshot; ⚠️ sound and keyboard not tried by hand |
 | Linux / Raspberry Pi player (Rust) | ✅ | ✅ x86_64 Linux (WSL) and aarch64 (cross-compiled) | ✅ tests on Linux x86_64 and under aarch64 emulation (qemu), console mode played on the 8 exported stories; **to be checked on a real Raspberry Pi** |
-| Android 2.3 → 14 player (Java) | ✅ | ✅ APK signed v1+v2, built against API 9 | ✅ Android 2.3.7, 5.1 and 14 emulators (import, WAV playback, pictures, D-pad, keyboard, touch, complete stories, confetti); **to be checked on a real Xperia Play** |
+| Android 2.3 → 14 player (Java) | ✅ | ✅ APK signed v1+v2, built against API 9 | ✅ Android 2.3.7, 5.1 and 14 emulators (import, WAV playback, pictures, D-pad, keyboard, touch, complete stories, confetti, rotation, listen again); first tries on a real Xperia Play and a smartphone, **0.2.2 fixes to be checked again on the device** |
 | Cardputer / ADV firmware (C++) | ✅ | ✅ PlatformIO (ESP32-S3) | ✅ engine conformance and translations on PC; **to be checked on the device** (screen, JPEG pictures, keyboard, sound, SD card) |
 | Automatic voice (Piper: Siwis and LJ Speech, in the editor) | ✅ | ✅ | ✅ synthesis, cache, preview, takes and export tested in Edge; 8 s of speech computed in about 2 s; English narration of the stories generated with LJ Speech |
 

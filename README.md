@@ -6,7 +6,7 @@ Herodio permet à un enfant (de 7 à 14 ans environ), à un enseignant ou à un 
 
 Tout fonctionne **hors ligne**, sans compte et sans abonnement.
 
-> **Version 0.2.1-alpha** : version d'essai, en français et en anglais. Le Studio et les lecteurs PC et Android sont testés ; le Cardputer, le vrai Raspberry Pi et le vrai Xperia Play n'ont pas encore été essayés sur l'appareil (voir [État du projet](#état-du-projet)).
+> **Version 0.2.2-alpha** : version d'essai, en français et en anglais. Le Studio et les lecteurs PC et Android sont testés ; le Cardputer et le vrai Raspberry Pi n'ont pas encore été essayés sur l'appareil ; les premiers essais sur un vrai Xperia Play et un smartphone ont mené aux correctifs Android de la 0.2.2, à revalider sur l'appareil (voir [État du projet](#état-du-projet)).
 
 ## Télécharger
 
@@ -73,7 +73,7 @@ Ce tableau distingue ce qui est écrit, compilé et testé :
 | Moteur TypeScript (référence) | ✅ | ✅ | ✅ conformité |
 | Lecteur Windows (Rust) | ✅ | ✅ | ✅ conformité, partie complète automatisée, rendu de la fenêtre vérifié par capture ; ⚠️ son et clavier non essayés à la main |
 | Lecteur Linux / Raspberry Pi (Rust) | ✅ | ✅ x86_64 Linux (WSL) et aarch64 (compilation croisée) | ✅ tests sur Linux x86_64 et sous émulation aarch64 (qemu), mode console joué sur les 8 histoires exportées ; **à valider sur un vrai Raspberry Pi** |
-| Lecteur Android 2.3 → 14 (Java) | ✅ | ✅ APK signé v1+v2, compilé contre l'API 9 | ✅ émulateurs Android 2.3.7, 5.1 et 14 (import, lecture WAV, illustrations, D-pad, clavier, toucher, histoires complètes, confettis) ; **à valider sur un vrai Xperia Play** |
+| Lecteur Android 2.3 → 14 (Java) | ✅ | ✅ APK signé v1+v2, compilé contre l'API 9 | ✅ émulateurs Android 2.3.7, 5.1 et 14 (import, lecture WAV, illustrations, D-pad, clavier, toucher, histoires complètes, confettis, rotation, réécoute) ; premiers essais sur un vrai Xperia Play et un smartphone, **correctifs de la 0.2.2 à revalider sur l'appareil** |
 | Firmware Cardputer / ADV (C++) | ✅ | ✅ PlatformIO (ESP32-S3) | ✅ conformité du moteur sur PC ; **à valider sur l'appareil** (écran, illustrations JPEG, clavier, son, carte SD) |
 | Voix automatique (Piper : Siwis et LJ Speech, dans l'éditeur) | ✅ | ✅ | ✅ synthèse, cache, prévisualisation, prises et export testés dans Edge ; 8 s de parole calculées en 2 s environ ; narration anglaise des histoires générée avec LJ Speech |
 
