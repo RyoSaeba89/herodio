@@ -4,6 +4,26 @@ Herodio permet à un enfant (de 7 à 14 ans environ), à un enseignant ou à un 
 
 Tout fonctionne **hors ligne**, sans compte et sans abonnement.
 
+> **Version 0.1.0-alpha** : première version publique, à essayer. Le Studio et les lecteurs PC et Android sont testés ; le Cardputer, le vrai Raspberry Pi et le vrai Xperia Play n'ont pas encore été essayés sur l'appareil (voir [État du projet](#état-du-projet)).
+
+## Télécharger
+
+Tous les fichiers sont sur la page [Releases](https://github.com/RyoSaeba89/herodio/releases) :
+
+| Fichier | Pour quoi faire |
+|---|---|
+| `herodio-studio-…-windows-portable.exe` | **Herodio Studio**, l'éditeur : un seul fichier à lancer, sans installation (Windows 10/11, WebView2). Voix et 8 histoires incluses. |
+| `herodio-player-…-windows.exe` | Lecteur pour PC Windows |
+| `herodio-player-…-linux-x64.tar.gz` | Lecteur pour PC Linux |
+| `herodio-player-…-raspberry-pi-arm64.tar.gz` | Lecteur pour Raspberry Pi 3, 4, 5 ou Zero 2 (Raspberry Pi OS 64 bits), avec les fichiers de démarrage automatique |
+| `herodio-android-….apk` | Lecteur Android, de la 2.3 (Xperia Play) à la 14 |
+| `herodio-cardputer-….bin` | Firmware M5Stack Cardputer / ADV, à flasher à l'adresse 0x0 |
+| `histoires-pc-android-raspberry-pi.zip` | Les 8 histoires prêtes à jouer (PC, Raspberry Pi, Android récent) |
+| `histoires-android23.zip` | Les 8 histoires allégées pour Android 2.3 |
+| `histoires-cardputer-carte-sd.zip` | Les 8 histoires pour le Cardputer, à décompresser à la racine de la carte microSD |
+
+L'installation de chaque lecteur est décrite dans [docs/lecteurs.md](docs/lecteurs.md). `SHA256SUMS.txt` permet de vérifier les téléchargements.
+
 ## Ce qu'on peut faire
 
 - **Éditeur de blocs** dans l'esprit de Scratch :
@@ -45,10 +65,10 @@ Ce tableau distingue ce qui est écrit, compilé et testé :
 
 | Composant | Implémenté | Compilé | Testé |
 |---|---|---|---|
-| Éditeur (Windows, Tauri) | ✅ | ✅ exe + installateur NSIS (2,8 Mo) | ✅ 16 tests unitaires, tests de bout en bout dans Edge (création, logique, studio, export, enregistrement/réouverture), démarrage de l'exe vérifié ; ⚠️ enregistrement au micro non testé automatiquement |
+| Éditeur (Windows, Tauri) | ✅ | ✅ exe portable (85 Mo) + installateur NSIS | ✅ 47 tests unitaires, tests de bout en bout dans Edge (création, logique, studio, export, enregistrement/réouverture), démarrage de l'exe vérifié ; ⚠️ enregistrement au micro non testé automatiquement |
 | Moteur TypeScript (référence) | ✅ | ✅ | ✅ conformité |
 | Lecteur Windows (Rust) | ✅ | ✅ | ✅ conformité, partie complète automatisée, rendu de la fenêtre vérifié par capture ; ⚠️ son et clavier non essayés à la main |
-| Lecteur Linux / Raspberry Pi (Rust) | ✅ | ✅ x86_64 Linux (WSL) ; vérification de compilation pour aarch64 | ⚠️ tests passés sur Linux x86_64 ; **à valider sur un vrai Raspberry Pi** |
+| Lecteur Linux / Raspberry Pi (Rust) | ✅ | ✅ x86_64 Linux (WSL) et aarch64 (compilation croisée) | ✅ tests sur Linux x86_64 et sous émulation aarch64 (qemu), mode console joué sur les 8 histoires exportées ; **à valider sur un vrai Raspberry Pi** |
 | Lecteur Android 2.3 → 14 (Java) | ✅ | ✅ APK signé v1+v2, compilé contre l'API 9 | ✅ émulateurs Android 2.3.7, 5.1 et 14 (import, lecture WAV, illustrations, D-pad, clavier, toucher, histoires complètes, confettis) ; **à valider sur un vrai Xperia Play** |
 | Firmware Cardputer / ADV (C++) | ✅ | ✅ PlatformIO (ESP32-S3) | ✅ conformité du moteur sur PC ; **à valider sur l'appareil** (écran, illustrations JPEG, clavier, son, carte SD) |
 | Voix automatique (Piper / Siwis, dans l'éditeur) | ✅ | ✅ | ✅ synthèse, cache, prévisualisation, prises et export testés dans Edge ; 8 s de parole calculées en 2 s environ |
@@ -109,11 +129,13 @@ npx tauri build        # exe + installateur dans src-tauri/target/release/
 # Lecteurs : voir docs/lecteurs.md
 ```
 
-Tests de bout en bout (Edge, sans fenêtre visible) : lancer `npm run dev`, puis `node e2e-smoke.mjs <dossier>`, `e2e-logic.mjs`, `e2e-studio.mjs` et `e2e-export.mjs`.
+Tests de bout en bout (Edge, sans fenêtre visible) : lancer `npm run dev`, puis `node e2e-smoke.mjs <dossier>`, `e2e-logic.mjs`, `e2e-studio.mjs`, `e2e-export.mjs` et `e2e-title.mjs`.
 
 ## Licences
 
-- Code : MIT.
+Détail des composants tiers : [THIRD_PARTY.md](THIRD_PARTY.md).
+
+- Code : MIT ([LICENSE](LICENSE)).
 - Histoires fournies (adaptations), illustrations, bruitages et musiques : créations Herodio, CC0. Les contes d'origine sont du domaine public.
 - **Voix « Siwis »** (voix automatique et narration des histoires fournies) : modèle Piper `fr_FR-siwis-medium`, entraîné sur les données SIWIS, licence **CC BY 4.0**. L'attribution est ajoutée automatiquement dans le `metadata.json` des packs.
-- Moteur de synthèse : onnxruntime-web (MIT) et piper_phonemize (MIT), qui contient les données d'espeak-ng (**GPL-3**). C'est un composant séparé, chargé depuis `editor/public/tts/vendor/`.
+- Moteur de synthèse : onnxruntime-web (MIT) et piper_phonemize (MIT), qui contient les données d'espeak-ng (**GPL-3**). C'est un composant séparé, chargé depuis `editor/public/tts/vendor/` ; texte de la licence dans [LICENSES/GPL-3.0.txt](LICENSES/GPL-3.0.txt).

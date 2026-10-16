@@ -96,10 +96,12 @@ Il faut autoriser l'installation d'applications de sources inconnues (« Sources
 
 Compilation : `cd players/android && python build.py`. Il faut un JDK et le SDK Android (`platforms;android-9`, `platforms;android-34` et build-tools 30 ou plus) ; Gradle n'est pas nécessaire. Le code est compilé contre l'API 9, ce qui garantit à la compilation qu'aucune API plus récente n'est utilisée.
 
+Sans réglage, l'APK est signé avec une clé de test créée sur place (`herodio-debug.keystore`, jamais publiée). Pour signer une version publiée, définir `HERODIO_KEYSTORE` (chemin de la clé, alias `herodio`) et `HERODIO_KEYSTORE_PASS` avant `python build.py`. Toutes les versions d'une même application doivent être signées avec la même clé, sinon Android refuse la mise à jour.
+
 ## M5Stack Cardputer / Cardputer ADV
 
 1. Exporter pour **Cardputer ADV**, puis décompresser l'archive à la **racine** de la carte microSD (FAT32). Un dossier `herodio/` apparaît, avec un sous-dossier par histoire.
-2. Installer le firmware (une seule fois) :
+2. Installer le firmware (une seule fois). Le plus simple : flasher l'image `herodio-cardputer-….bin` de la [release](https://github.com/RyoSaeba89/herodio/releases) à l'adresse **0x0**, depuis Chrome ou Edge avec [ESP Web Flasher](https://espressif.github.io/esptool-js/), ou avec `esptool.py --chip esp32s3 write_flash 0x0 herodio-cardputer-0.1.0-alpha.bin`. Ou bien compiler depuis les sources :
 
    ```sh
    pip install platformio

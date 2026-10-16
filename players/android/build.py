@@ -65,12 +65,17 @@ def main():
     # 4. Alignement et signature (v1 pour Android 2.3, v2 pour les versions récentes)
     aligned = os.path.join(B, 'herodio.aligned.apk')
     run(tool('zipalign'), '-f', '-p', '4', unaligned, aligned)
-    ks = os.path.join(HERE, 'herodio-debug.keystore')
-    if not os.path.exists(ks):
-        run('keytool', '-genkeypair', '-keystore', ks, '-storepass', 'herodio', '-keypass', 'herodio', '-alias', 'herodio',
-            '-keyalg', 'RSA', '-keysize', '2048', '-validity', '10000', '-dname', 'CN=Herodio, O=Herodio')
+    # Clé de publication si HERODIO_KEYSTORE est défini (mot de passe dans HERODIO_KEYSTORE_PASS), sinon clé de test locale.
+    ks = os.environ.get('HERODIO_KEYSTORE')
+    pw = os.environ.get('HERODIO_KEYSTORE_PASS', 'herodio')
+    if not ks:
+        ks = os.path.join(HERE, 'herodio-debug.keystore')
+        if not os.path.exists(ks):
+            run('keytool', '-genkeypair', '-keystore', ks, '-storepass', pw, '-keypass', pw, '-alias', 'herodio',
+                '-keyalg', 'RSA', '-keysize', '2048', '-validity', '10000', '-dname', 'CN=Herodio, O=Herodio')
     apk = os.path.join(B, 'herodio.apk')
-    run(tool('apksigner'), 'sign', '--ks', ks, '--ks-pass', 'pass:herodio', '--ks-key-alias', 'herodio', '--min-sdk-version', '9', '--out', apk, aligned, shell=WIN)
+    run(tool('apksigner'), 'sign', '--ks', ks, '--ks-pass', 'env:HERODIO_KEYSTORE_PASS' if 'HERODIO_KEYSTORE_PASS' in os.environ else 'pass:herodio',
+        '--ks-key-alias', 'herodio', '--min-sdk-version', '9', '--out', apk, aligned, shell=WIN)
     run(tool('apksigner'), 'verify', '--min-sdk-version', '9', apk, shell=WIN)
     for f in (unaligned, aligned):
         os.remove(f)
