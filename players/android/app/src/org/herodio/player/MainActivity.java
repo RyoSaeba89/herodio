@@ -447,9 +447,14 @@ public class MainActivity extends Activity implements Session.Listener {
     /** Interception en amont des vues : sur Android 2.3, certaines touches (chiffres) n'arrivent jamais à onKeyDown. */
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        if (event.getAction() == KeyEvent.ACTION_DOWN && handleKey(event.getKeyCode())) return true;
+        int code = event.getKeyCode();
+        if (event.getAction() == KeyEvent.ACTION_DOWN && handleKey(code)) { handledDown = code; return true; }
+        // Le relâchement d'une touche déjà traitée ne doit pas « cliquer » le bouton qui a pris le focus dans le nouvel écran.
+        if (event.getAction() == KeyEvent.ACTION_UP && code == handledDown) { handledDown = -1; return true; }
         return super.dispatchKeyEvent(event);
     }
+
+    private int handledDown = -1;
 
     private boolean handleKey(int code) {
         if (langSel >= 0) {
