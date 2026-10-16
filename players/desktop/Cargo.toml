@@ -1,6 +1,6 @@
 [package]
 name = "herodio-player"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Lecteur d'histoires audio interactives Herodio (Windows, Linux, Raspberry Pi)"
 license = "MIT"
@@ -18,3 +18,6 @@ zip = { version = "9.0.3", default-features = false, features = ["deflate"] }
 strip = true
 lto = true
 opt-level = "s"
+
+[build-dependencies]
+embed-resource = "3.0.12"

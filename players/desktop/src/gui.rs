@@ -275,7 +275,10 @@ impl App {
             self.texture(&ctx, &pk, &c)
         });
         let sel = i == self.lib_sel;
-        let h = w * 0.75 + 120.0;
+        let sub = if desc.is_empty() { format!("par {author}") } else { desc };
+        let g_title = ui.painter().layout(title, FontId::proportional(25.0), INK, w - 32.0);
+        let g_sub = ui.painter().layout(sub, FontId::proportional(16.0), MUTED, w - 32.0);
+        let h = w * 0.75 + 42.0 + g_title.size().y + g_sub.size().y;
         let (rect, resp) = ui.allocate_exact_size(vec2(w, h), Sense::click());
         let hover = resp.hovered() || sel;
         let lift = ctx.animate_bool_with_time(resp.id, hover, 0.15) * 6.0;
@@ -295,12 +298,10 @@ impl App {
         p.rect_filled(Rect::from_min_size(pos2(rect.left(), img_rect.bottom()), vec2(w, 6.0)), 0.0, color);
         let tx = rect.left() + 16.0;
         let mut y = img_rect.bottom() + 16.0;
-        let g = p.layout(title, FontId::proportional(25.0), INK, w - 32.0);
-        let gh = g.size().y;
-        p.galley(pos2(tx, y), g, INK);
-        y += gh + 4.0;
-        let sub = if desc.is_empty() { format!("par {author}") } else { desc };
-        p.galley(pos2(tx, y), p.layout(sub, FontId::proportional(16.0), MUTED, w - 32.0), MUTED);
+        let th = g_title.size().y;
+        p.galley(pos2(tx, y), g_title, INK);
+        y += th + 4.0;
+        p.galley(pos2(tx, y), g_sub, MUTED);
         if sel {
             p.rect_stroke(rect, 22.0, Stroke::new(5.0, color), egui::StrokeKind::Outside);
             resp.scroll_to_me(None);
@@ -363,8 +364,12 @@ impl App {
         let end = s.end_kind().map(str::to_owned);
         let options = s.options();
         let selected = s.selected;
+        let reading = s.reading;
         let playing = s.engine.status == Status::Playing;
-        let wide = ui.available_width() > 900.0;
+        // Paysage : illustration à gauche, texte et réponses à droite ; sinon l'une sous l'autre.
+        let avail = ui.available_size();
+        let wide = avail.x > avail.y * 1.15;
+        let moved = ctx.input(|i| i.pointer.is_moving());
         let fade = (age / 0.35).min(1.0);
         let audio_busy = self.audio.busy();
         let mut act: Option<Action> = None;
@@ -372,7 +377,9 @@ impl App {
         let mut content = |ui: &mut egui::Ui| {
             ui.multiply_opacity(fade);
             // Carte de texte
-            egui::Frame::new().fill(Color32::from_white_alpha(240)).corner_radius(CornerRadius::same(26)).inner_margin(24.0).shadow(shadow(20, 25)).show(ui, |ui| {
+            // Le texte est surligné pendant qu'on le lit à voix haute.
+            let stroke = if reading == Some(0) { Stroke::new(5.0, color) } else { Stroke::NONE };
+            egui::Frame::new().fill(Color32::from_white_alpha(240)).stroke(stroke).corner_radius(CornerRadius::same(26)).inner_margin(24.0).shadow(shadow(20, 25)).show(ui, |ui| {
                 ui.set_width(ui.available_width());
                 if let Some(k) = &end {
                     let c = match k.as_str() { "secret" => Color32::from_rgb(139, 92, 246), "sad" => Color32::from_rgb(59, 127, 245), _ => CHOICE_COLORS[0] };
@@ -381,7 +388,7 @@ impl App {
                     });
                     ui.add_space(6.0);
                 }
-                ui.horizontal(|ui| {
+                ui.horizontal_wrapped(|ui| {
                     ui.label(RichText::new(&title).size(36.0).strong().color(mix(color, INK, 0.35)));
                     if audio_busy { speaking(ui, color, t); }
                 });
@@ -392,8 +399,9 @@ impl App {
             if !options.is_empty() {
                 for (i, o) in options.iter().enumerate() {
                     let c = CHOICE_COLORS[i % CHOICE_COLORS.len()];
-                    let sel = i == selected;
-                    let (rect, resp) = ui.allocate_exact_size(vec2(ui.available_width(), 74.0), Sense::click());
+                    let sel = i == selected && reading != Some(0);
+                    let g = ui.painter().layout(o.clone(), FontId::proportional(26.0), Color32::WHITE, ui.available_width() - 100.0);
+                    let (rect, resp) = ui.allocate_exact_size(vec2(ui.available_width(), (g.size().y + 30.0).max(74.0)), Sense::click());
                     let grow = ctx.animate_bool_with_time(resp.id, sel || resp.hovered(), 0.12);
                     let r = rect.expand(grow * 4.0);
                     let p = ui.painter();
@@ -402,10 +410,9 @@ impl App {
                     if sel { p.rect_stroke(r, 37.0, Stroke::new(5.0, Color32::WHITE), egui::StrokeKind::Inside); }
                     p.circle_filled(pos2(r.left() + 40.0, r.center().y), 24.0, Color32::WHITE);
                     p.text(pos2(r.left() + 40.0, r.center().y), Align2::CENTER_CENTER, (i + 1).to_string(), FontId::proportional(28.0), c);
-                    let g = p.layout(o.clone(), FontId::proportional(26.0), Color32::WHITE, r.width() - 100.0);
                     let gy = r.center().y - g.size().y / 2.0;
                     p.galley(pos2(r.left() + 80.0, gy), g, Color32::WHITE);
-                    if resp.hovered() && !sel { act = Some(Box::new(move |s, a| { s.selected = i; s.play_option(a); })); }
+                    if resp.hovered() && moved && i != selected { act = Some(Box::new(move |s, a| { s.selected = i; s.play_option(a); })); }
                     if resp.clicked() { act = Some(Box::new(move |s, a| s.choose(i, a))); }
                     ui.add_space(6.0);
                 }
@@ -419,9 +426,11 @@ impl App {
             }
         };
 
-        let illustration = |ui: &mut egui::Ui, w: f32| {
+        // L'illustration tient dans la largeur et la hauteur données, pour laisser le texte visible.
+        let illustration = |ui: &mut egui::Ui, w: f32, h: f32| {
             if let Some(tx) = &tex {
-                let size = vec2(w, w * tx.size()[1] as f32 / tx.size()[0] as f32);
+                let ratio = tx.size()[1] as f32 / tx.size()[0] as f32;
+                let size = if w * ratio > h { vec2(h / ratio, h) } else { vec2(w, w * ratio) };
                 let (rect, _) = ui.allocate_exact_size(size, Sense::hover());
                 let r = Rect::from_center_size(rect.center(), size * (1.0 + (1.0 - fade) * 0.03));
                 ui.painter().add(shadow(30, 45).as_shape(r, CornerRadius::same(28)));
@@ -433,12 +442,12 @@ impl App {
             if wide && tex.is_some() {
                 ui.columns(2, |cols| {
                     let w = cols[0].available_width();
-                    illustration(&mut cols[0], w);
+                    cols[0].vertical_centered(|ui| illustration(ui, w, avail.y - 60.0));
                     content(&mut cols[1]);
                 });
             } else {
                 let w = ui.available_width().min(760.0);
-                ui.vertical_centered(|ui| illustration(ui, w));
+                ui.vertical_centered(|ui| illustration(ui, w, avail.y * 0.4));
                 ui.add_space(12.0);
                 content(ui);
             }
@@ -458,6 +467,10 @@ impl App {
 impl eframe::App for App {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
+        // Tout s'agrandit ou rétrécit avec la fenêtre (mise en page prévue pour 1100 × 720).
+        let size = ctx.content_rect().size() * ctx.zoom_factor();
+        let zoom = (size.x / 1100.0).min(size.y / 720.0).clamp(0.6, 1.6);
+        if (zoom - ctx.zoom_factor()).abs() > 0.01 { ctx.set_zoom_factor(zoom); }
         self.handle_drops(&ctx);
         if ctx.input(|i| i.key_pressed(Key::F11)) {
             self.fullscreen = !self.fullscreen;
@@ -472,7 +485,9 @@ impl eframe::App for App {
 
 pub fn run(open: Option<PathBuf>, fullscreen: bool) -> eframe::Result {
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_title("Herodio — Lecteur d'histoires").with_inner_size([1280.0, 820.0]).with_fullscreen(fullscreen).with_drag_and_drop(true),
+        viewport: egui::ViewportBuilder::default()
+            .with_title("Herodio — Lecteur d'histoires")
+            .with_icon(eframe::icon_data::from_png_bytes(include_bytes!("../icon.png")).expect("icône")).with_inner_size([1280.0, 820.0]).with_fullscreen(fullscreen).with_drag_and_drop(true),
         ..Default::default()
     };
     eframe::run_native("Herodio", options, Box::new(move |cc| Ok(Box::new(App::new(cc, open, fullscreen)))))

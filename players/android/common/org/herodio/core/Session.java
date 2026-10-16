@@ -13,8 +13,11 @@ public final class Session implements MediaPlayer.OnCompletionListener {
     public final File dir;
     /** Réponse surlignée (navigation D-pad / clavier). */
     public int selected;
+    /** Ce qui est lu à voix haute : 0 = le texte, i + 1 = la réponse i, -1 = rien. */
+    public int reading = -1;
+    /** Lecture enchaînée du texte puis de chaque réponse ; coupée dès qu'on choisit soi-même une réponse. */
+    private boolean chain;
     private MediaPlayer player;
-    private boolean scenePlaying;
     private final Listener listener;
 
     public Session(File dir, Engine.Story story, Listener listener) {
@@ -30,9 +33,29 @@ public final class Session implements MediaPlayer.OnCompletionListener {
 
     private void enter() {
         selected = 0;
-        scenePlaying = engine.node != null && "scene".equals(engine.node.type);
-        if (!play(engine.node == null ? null : engine.node.audio)) scenePlaying = false;
+        chain = true;
+        readFrom(0);
         listener.onChange();
+    }
+
+    private String itemAudio(int k) {
+        if (engine.node == null) return null;
+        if (k == 0) return engine.node.audio;
+        return k <= options().length ? engine.node.options[k - 1].audio : null;
+    }
+
+    /** Lit le premier élément sonore à partir de k, en surlignant la réponse lue. */
+    private void readFrom(int k) {
+        reading = -1;
+        stop();
+        for (; k <= options().length; k++) {
+            if (play(itemAudio(k))) {
+                reading = k;
+                if (k > 0) selected = k - 1;
+                return;
+            }
+        }
+        selected = 0; // tout est lu : la surbrillance revient sur le choix 1
     }
 
     /** Joue un son du pack ; renvoie false s'il n'y en a pas ou s'il est illisible. */
@@ -62,8 +85,12 @@ public final class Session implements MediaPlayer.OnCompletionListener {
 
     public void onCompletion(MediaPlayer mp) {
         if (mp != player) return;
+        int k = reading;
         stop();
-        if (scenePlaying) next(); else listener.onChange();
+        reading = -1;
+        if (k >= 0 && "scene".equals(engine.node.type)) { next(); return; }
+        if (k >= 0 && chain) readFrom(k + 1);
+        listener.onChange();
     }
 
     public void stop() {
@@ -100,8 +127,8 @@ public final class Session implements MediaPlayer.OnCompletionListener {
     public void playOption() {
         String[] o = options();
         if (selected < o.length) {
-            scenePlaying = false;
-            play(engine.node.options[selected].audio);
+            chain = false;
+            reading = play(engine.node.options[selected].audio) ? selected + 1 : -1;
         }
     }
 

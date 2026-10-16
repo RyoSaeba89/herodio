@@ -4,7 +4,7 @@ Herodio permet à un enfant (de 7 à 14 ans environ), à un enseignant ou à un 
 
 Tout fonctionne **hors ligne**, sans compte et sans abonnement.
 
-> **Version 0.1.0-alpha** : première version publique, à essayer. Le Studio et les lecteurs PC et Android sont testés ; le Cardputer, le vrai Raspberry Pi et le vrai Xperia Play n'ont pas encore été essayés sur l'appareil (voir [État du projet](#état-du-projet)).
+> **Version 0.2.0-alpha** : version d'essai. Le Studio et les lecteurs PC et Android sont testés ; le Cardputer, le vrai Raspberry Pi et le vrai Xperia Play n'ont pas encore été essayés sur l'appareil (voir [État du projet](#état-du-projet)).
 
 ## Télécharger
 
@@ -55,7 +55,7 @@ L'installation de chaque lecteur est décrite dans [docs/lecteurs.md](docs/lecte
 - **Lecteurs illustrés et colorés** :
   - bibliothèque en cartes avec couverture ;
   - grande illustration et fond aux couleurs de l'histoire ;
-  - réponses en grosses pastilles colorées et numérotées, la réponse surlignée étant lue à voix haute ;
+  - réponses en grosses pastilles colorées et numérotées ; le texte puis chaque réponse sont lus à la suite, en surlignant ce qui est lu ;
   - fondu entre les scènes ;
   - confettis (fin heureuse) ou pluie d'étoiles (fin secrète).
 

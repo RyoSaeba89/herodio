@@ -329,7 +329,7 @@ public class MainActivity extends Activity implements Session.Listener {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
         card.setPadding(px(20), px(16), px(20), px(18));
-        card.setBackgroundDrawable(box(0xF2FFFFFF, 0, 24));
+        card.setBackgroundDrawable(box(0xF2FFFFFF, s.reading == 0 ? color : 0, 24)); // surligné pendant qu'on le lit
         String end = s.endLabel();
         if (end != null) {
             String k = s.engine.node != null ? s.engine.node.kind : null;
@@ -373,8 +373,9 @@ public class MainActivity extends Activity implements Session.Listener {
     /** Grande réponse colorée avec sa pastille numérotée ; celle qui est surlignée a un contour blanc. */
     private View choiceButton(final Session s, final int i, String label) {
         int c = CHOICE[i % CHOICE.length];
-        boolean sel = i == s.selected;
+        boolean sel = i == s.selected && s.reading != 0;
         LinearLayout b = new LinearLayout(this);
+        if (sel && s.reading > 0) scrollTo(b);
         b.setGravity(Gravity.CENTER_VERTICAL);
         GradientDrawable bg = box(c, 0, 32);
         if (sel) bg.setStroke(px(4), Color.WHITE);

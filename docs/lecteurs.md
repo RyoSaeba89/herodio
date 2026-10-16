@@ -6,6 +6,7 @@ Dans Herodio Studio, **📦 Exporter mon histoire** puis choisir l'appareil. Cha
 
 - **Version portable** : `herodio-player.exe` accompagné d'un dossier `histoires` placé à côté. Copier les `.aistory` dans ce dossier ; rien n'est installé sur le PC.
 - Sans dossier `histoires` à côté du programme, la bibliothèque est `%USERPROFILE%\Herodio\histoires`.
+- À chaque étape, le texte puis chaque réponse sont lus à la suite, et ce qui est lu est surligné ; dès qu'on choisit soi-même une réponse, la lecture enchaînée s'arrête. La fenêtre s'adapte à sa taille (tout s'agrandit ou rétrécit avec elle).
 - On peut aussi **glisser un `.aistory` dans la fenêtre** (il est copié dans la bibliothèque) ou le passer en argument (`herodio-player.exe histoire.aistory`, ou « Ouvrir avec… »).
 
 | Touche | Action |
@@ -101,7 +102,7 @@ Sans réglage, l'APK est signé avec une clé de test créée sur place (`herodi
 ## M5Stack Cardputer / Cardputer ADV
 
 1. Exporter pour **Cardputer ADV**, puis décompresser l'archive à la **racine** de la carte microSD (FAT32). Un dossier `herodio/` apparaît, avec un sous-dossier par histoire.
-2. Installer le firmware (une seule fois). Le plus simple : flasher l'image `herodio-cardputer-….bin` de la [release](https://github.com/RyoSaeba89/herodio/releases) à l'adresse **0x0**, depuis Chrome ou Edge avec [ESP Web Flasher](https://espressif.github.io/esptool-js/), ou avec `esptool.py --chip esp32s3 write_flash 0x0 herodio-cardputer-0.1.0-alpha.bin`. Ou bien compiler depuis les sources :
+2. Installer le firmware (une seule fois). Le plus simple : flasher l'image `herodio-cardputer-….bin` de la [release](https://github.com/RyoSaeba89/herodio/releases) à l'adresse **0x0**, depuis Chrome ou Edge avec [ESP Web Flasher](https://espressif.github.io/esptool-js/), ou avec `esptool.py --chip esp32s3 write_flash 0x0 herodio-cardputer-0.2.0-alpha.bin`. Ou bien compiler depuis les sources :
 
    ```sh
    pip install platformio

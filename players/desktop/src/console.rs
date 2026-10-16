@@ -56,9 +56,9 @@ fn run_inner(open: Option<PathBuf>, audio: &mut Audio) -> std::io::Result<()> {
     let mut dirty = true;
     loop {
         if let Some(s) = session.as_mut() {
-            let before = s.engine.token();
+            let before = (s.engine.token(), s.selected, s.reading);
             s.tick(audio);
-            dirty |= s.engine.token() != before;
+            dirty |= (s.engine.token(), s.selected, s.reading) != before;
             if dirty {
                 let (title, text) = s.title_text();
                 let mut l = vec![format!("== {} ==", s.pack.story.title), String::new()];
