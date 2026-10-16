@@ -31,9 +31,9 @@ static const char* const EN[][2] = {
     {"Choix ", "Choice "},
     {"Mon sac", "My bag"},
     {"(vide)", "(empty)"},
-    {"OK rejouer   Del menu", "OK play again   Del menu"},
-    {";/. choisir  OK valider  Del menu", ";/. choose  OK confirm  Del menu"},
-    {"OK suivant   t image   Del menu", "OK next   t picture   Del menu"},
+    {"OK rejouer  e réécouter  Del menu", "OK play again  e listen  Del menu"},
+    {";/. choisir  OK valider  e réécouter  Del menu", ";/. choose  OK confirm  e listen  Del menu"},
+    {"OK suivant  e réécouter  t image  Del menu", "OK next  e listen  t picture  Del menu"},
     // Erreurs de lecture de story.json (engine.h)
     {"story.json illisible : ", "unreadable story.json: "},
     {"ce n'est pas une histoire Herodio", "this is not a Herodio story"},

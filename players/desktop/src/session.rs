@@ -35,6 +35,16 @@ impl Session {
         self.read_from(0, audio);
     }
 
+    /// Relit le moment en cours depuis le début : le texte, puis chaque réponse.
+    pub fn replay(&mut self, audio: &mut Audio) {
+        self.enter(audio);
+    }
+
+    /// Le moment en cours a-t-il au moins un son ?
+    pub fn has_audio(&self) -> bool {
+        (0..=self.options().len()).any(|k| self.item_audio(k).is_some())
+    }
+
     fn item_audio(&self, k: usize) -> Option<String> {
         match (k, self.engine.current()) {
             (0, n) => n.and_then(|n| n.audio()).map(str::to_owned),
@@ -225,7 +235,14 @@ mod tests {
         assert_eq!((s.reading, s.selected), (None, 0)); // retour sur le choix 1
         assert_eq!(s.engine.token(), "c1"); // on attend la réponse
 
+        assert!(s.has_audio());
+        s.replay(&mut a); // « Réécouter » : la question, puis chaque réponse
+        assert_eq!((s.reading, s.selected), (Some(0), 0));
+        wait(&mut s, &mut a);
+        assert_eq!(s.reading, Some(1));
+
         s.restart(&mut a);
+        assert!(!s.has_audio()); // la scène d'ouverture est muette
         s.confirm(&mut a);
         s.select(1, &mut a); // l'enfant choisit lui-même : la lecture enchaînée s'arrête
         assert_eq!(s.reading, Some(2));

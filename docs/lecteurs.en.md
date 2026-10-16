@@ -19,6 +19,7 @@ In Herodio Studio, click **📦 Export my story** and choose the device. Every p
 | ↑ ↓ | choose (the highlighted answer is read aloud if it has a sound) |
 | Enter / Space | confirm |
 | 1 to 9 | pick an answer directly |
+| E | listen to the current moment again (also the 🔊 Listen again button) |
 | R | start again |
 | Esc | back to the library |
 | F11 | full screen |
@@ -32,7 +33,7 @@ Building: `cd players/desktop && cargo build --release` → `target/release/hero
 The same program works on a Raspberry Pi, in two ways:
 
 - **with a desktop**: a graphical window, as on Windows;
-- **without a desktop** (Raspberry Pi OS Lite, small screen, Pi Zero 2): `herodio-player --console`. The interface is then shown as text in the console, with no browser or graphical server. On first launch, `1` chooses French and `2` English (or ↑ ↓ then Enter); `L` changes the language from the library.
+- **without a desktop** (Raspberry Pi OS Lite, small screen, Pi Zero 2): `herodio-player --console`. The interface is then shown as text in the console, with no browser or graphical server. On first launch, `1` chooses French and `2` English (or ↑ ↓ then Enter); `L` changes the language from the library, `E` replays the current moment.
 
 ### Building on the Pi
 
@@ -95,7 +96,9 @@ Each button is wired between the GPIO pin and ground. The codes used are 103 = �
   - touch the screen;
   - D-pad ↑ ↓ and confirm (the Xperia Play cross, the A or X button of a gamepad);
   - Back (the Xperia Play circle);
+  - listen again to the current moment: the “♪ Listen again” button at the top right, the Xperia Play triangle (Y on a gamepad) or the E key;
   - digits 1 to 9 on devices with a keyboard.
+- The screen stays on while listening, and the page adapts when the device is rotated or the Xperia Play slider is opened.
 - **Deleting a story**: long-press the story.
 - **Language**: asked on first launch (touch, D-pad or keys 1 and 2), then the "English" / "Français" button at the top of the library.
 
@@ -125,6 +128,7 @@ By default, the APK is signed with a test key created on the spot (`herodio-debu
 | `OK` (Enter) or the G0 button | confirm |
 | `1`–`9` | pick an answer directly |
 | `Del` | back to the library |
+| `e` | listen to the current moment again |
 | `r` | start again |
 | `i` | show the bag |
 | `t` | switch between the picture and the text |

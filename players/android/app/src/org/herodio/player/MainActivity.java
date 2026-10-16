@@ -14,6 +14,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -67,6 +68,8 @@ public class MainActivity extends Activity implements Session.Listener {
         // Aucun champ de saisie : la fenêtre n'utilise pas de clavier virtuel, qui pourrait avaler les touches
         // (constaté avec PinyinIME sur Android 2.3 : les chiffres n'arrivaient jamais).
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM, WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+        // On écoute sans toucher l'écran : il ne doit pas s'éteindre (même solution qu'Explorer3).
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         root = Library.root(this);
         String lang = getSharedPreferences("herodio", MODE_PRIVATE).getString("lang", null);
         I18n.setEnglish("en".equals(lang));
@@ -80,6 +83,16 @@ public class MainActivity extends Activity implements Session.Listener {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         handleView(intent);
+    }
+
+    /** Rotation, clapet de l'Xperia Play ouvert ou fermé : l'écran est reconstruit à la nouvelle largeur. */
+    @Override
+    public void onConfigurationChanged(Configuration c) {
+        super.onConfigurationChanged(c);
+        images.clear();
+        if (langSel >= 0) showLanguage();
+        else if (session != null) onChange();
+        else if (library != null) showLibrary();
     }
 
     @Override
@@ -351,6 +364,9 @@ public class MainActivity extends Activity implements Session.Listener {
         top.addView(pill("◀", Color.WHITE, INK, new View.OnClickListener() { public void onClick(View v) { closeStory(); } }));
         TextView title = text("  " + s.engine.story.title, 16, mix(color, INK, 0.4f), true);
         top.addView(title, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        // Écran étroit : la note seule, pour laisser la place au titre.
+        boolean narrow = getResources().getDisplayMetrics().widthPixels < px(480);
+        if (s.hasAudio()) top.addView(pill(narrow ? "♪" : tr("♪ Réécouter"), Color.WHITE, INK, new View.OnClickListener() { public void onClick(View v) { s.replay(); } }));
         add(col, top, 0);
         String inv = s.inventory();
         if (inv.length() > 0) {
@@ -366,7 +382,13 @@ public class MainActivity extends Activity implements Session.Listener {
         body.setOrientation(LinearLayout.VERTICAL);
         int contentWidth = Math.min(getResources().getDisplayMetrics().widthPixels, px(820)) - px(32);
         Bitmap pic = s.engine.node != null ? image(s.dir, s.engine.node.image, contentWidth) : null;
-        if (pic != null) add(body, new Views.RoundImage(this, pic, px(24), false), 14);
+        if (pic != null) { // en paysage, l'image laisse voir le texte : au plus la moitié de la hauteur de l'écran
+            int w = Math.min(contentWidth, getResources().getDisplayMetrics().heightPixels / 2 * pic.getWidth() / Math.max(1, pic.getHeight()));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(w, ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp.gravity = Gravity.CENTER_HORIZONTAL;
+            lp.topMargin = px(14);
+            body.addView(new Views.RoundImage(this, pic, px(24), false), lp);
+        }
 
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
@@ -475,6 +497,7 @@ public class MainActivity extends Activity implements Session.Listener {
                 case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: case KeyEvent.KEYCODE_SPACE:
                 case KeyEvent.KEYCODE_BUTTON_A: case KeyEvent.KEYCODE_BUTTON_X: session.confirm(); return true;
                 case KeyEvent.KEYCODE_BACK: case KeyEvent.KEYCODE_BUTTON_B: closeStory(); return true;
+                case KeyEvent.KEYCODE_BUTTON_Y: case KeyEvent.KEYCODE_E: session.replay(); return true; // triangle de l'Xperia Play
                 default:
                     if (code >= KeyEvent.KEYCODE_1 && code <= KeyEvent.KEYCODE_9) { session.choose(code - KeyEvent.KEYCODE_1); return true; }
             }

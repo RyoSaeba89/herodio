@@ -19,6 +19,7 @@ Dans Herodio Studio, **📦 Exporter mon histoire** puis choisir l'appareil. Cha
 | ↑ ↓ | choisir (la réponse surlignée est lue à voix haute si elle a un son) |
 | Entrée / Espace | valider |
 | 1 à 9 | réponse directe |
+| E | réécouter le moment en cours (aussi le bouton 🔊 Réécouter) |
 | R | recommencer |
 | Échap | revenir à la bibliothèque |
 | F11 | plein écran |
@@ -32,7 +33,7 @@ Compilation : `cd players/desktop && cargo build --release` → `target/release/
 Le même programme fonctionne sur Raspberry Pi, de deux façons :
 
 - **avec bureau** : fenêtre graphique, comme sous Windows ;
-- **sans bureau** (Raspberry Pi OS Lite, petit écran, Pi Zero 2) : `herodio-player --console`. L'interface s'affiche alors en mode texte dans la console, sans navigateur ni serveur graphique. Au premier démarrage, `1` choisit le français et `2` l'anglais (ou ↑ ↓ puis Entrée) ; `L` change de langue depuis la bibliothèque.
+- **sans bureau** (Raspberry Pi OS Lite, petit écran, Pi Zero 2) : `herodio-player --console`. L'interface s'affiche alors en mode texte dans la console, sans navigateur ni serveur graphique. Au premier démarrage, `1` choisit le français et `2` l'anglais (ou ↑ ↓ puis Entrée) ; `L` change de langue depuis la bibliothèque, `E` réécoute le moment en cours.
 
 ### Compilation sur le Pi
 
@@ -95,7 +96,9 @@ Chaque bouton se branche entre la broche GPIO et la masse. Les codes utilisés s
   - toucher l'écran ;
   - D-pad ↑ ↓ et validation (croix du Xperia Play, bouton A ou X d'une manette) ;
   - Retour (rond du Xperia Play) ;
+  - réécouter le moment en cours : bouton « ♪ Réécouter » en haut à droite, triangle du Xperia Play (bouton Y d'une manette) ou touche E ;
   - chiffres 1 à 9 sur les appareils qui ont un clavier.
+- L'écran reste allumé pendant l'écoute et la page s'adapte quand on tourne l'appareil ou qu'on ouvre le clapet du Xperia Play.
 - **Supprimer une histoire** : appui long sur l'histoire.
 - **Langue** : demandée au premier lancement (toucher, D-pad ou touches 1 et 2), puis bouton « English » / « Français » en haut de la bibliothèque.
 
@@ -125,6 +128,7 @@ Sans réglage, l'APK est signé avec une clé de test créée sur place (`herodi
 | `OK` (Entrée) ou le bouton G0 | valider |
 | `1`–`9` | réponse directe |
 | `Del` | revenir à la bibliothèque |
+| `e` | réécouter le moment en cours |
 | `r` | recommencer |
 | `i` | afficher le sac |
 | `t` | basculer entre l'illustration et le texte |

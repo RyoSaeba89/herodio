@@ -372,12 +372,13 @@ impl App {
         let age = self.node_since.elapsed().as_secs_f32();
 
         let mut back = false;
-        let (k_up, k_down, k_ok, k_back, k_restart, digit) = ctx.input(|i| (
+        let (k_up, k_down, k_ok, k_back, k_restart, k_replay, digit) = ctx.input(|i| (
             i.key_pressed(Key::ArrowUp) || i.key_pressed(Key::ArrowLeft),
             i.key_pressed(Key::ArrowDown) || i.key_pressed(Key::ArrowRight),
             i.key_pressed(Key::Enter) || i.key_pressed(Key::Space),
             i.key_pressed(Key::Escape) || i.key_pressed(Key::Backspace),
             i.key_pressed(Key::R),
+            i.key_pressed(Key::E),
             [Key::Num1, Key::Num2, Key::Num3, Key::Num4, Key::Num5, Key::Num6, Key::Num7, Key::Num8, Key::Num9].iter().position(|k| i.key_pressed(*k)),
         ));
         {
@@ -386,6 +387,7 @@ impl App {
             if k_down { s.select(1, audio); }
             if let Some(d) = digit { s.choose(d, audio); } else if k_ok { s.confirm(audio); }
             if k_restart { s.restart(audio); }
+            if k_replay { s.replay(audio); }
         }
         if k_back { back = true; }
 
@@ -396,6 +398,9 @@ impl App {
             }
             ui.label(RichText::new(&s.pack.story.title).size(22.0).strong().color(mix(color, INK, 0.4)));
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if s.has_audio() && ui.add(egui::Button::new(RichText::new(tr("🔊 Réécouter")).size(20.0)).fill(Color32::from_white_alpha(220)).corner_radius(CornerRadius::same(20))).clicked() {
+                    s.replay(&mut self.audio);
+                }
                 for item in s.inventory().iter().rev() {
                     egui::Frame::new().fill(Color32::from_rgb(139, 92, 246)).corner_radius(CornerRadius::same(18)).inner_margin(vec2(14.0, 6.0)).show(ui, |ui| {
                         ui.label(RichText::new(format!("🎒 {item}")).size(18.0).color(Color32::WHITE).strong());
@@ -499,7 +504,7 @@ impl App {
                 content(ui);
             }
             ui.add_space(14.0);
-            ui.label(RichText::new(tr("Flèches : choisir · Entrée : valider · 1-9 : réponse directe · R : recommencer · Échap : retour · F11 : plein écran")).small().color(MUTED));
+            ui.label(RichText::new(tr("Flèches : choisir · Entrée : valider · 1-9 : réponse directe · E : réécouter · R : recommencer · Échap : retour · F11 : plein écran")).small().color(MUTED));
         });
 
         if let Some(k) = &end {

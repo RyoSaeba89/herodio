@@ -265,9 +265,9 @@ static void drawPlay() {
         if (engine->items.empty()) canvas.drawString(tr("(vide)"), 30, iy);
         for (auto& it : engine->items) { if (iy > 100) break; canvas.drawString(story.itemName(it).c_str(), 30, iy); iy += 14; }
     }
-    if (engine->status != PLAYING) hint(tr("OK rejouer   Del menu"));
-    else if (nopt) hint(tr(";/. choisir  OK valider  Del menu"));
-    else hint(tr("OK suivant   t image   Del menu"));
+    if (engine->status != PLAYING) hint(tr("OK rejouer  e réécouter  Del menu"));
+    else if (nopt) hint(tr(";/. choisir  OK valider  e réécouter  Del menu"));
+    else hint(tr("OK suivant  e réécouter  t image  Del menu"));
 }
 
 /// Choix de la langue, en français et en anglais à la fois.
@@ -327,15 +327,20 @@ static void scanLibrary() {
     libSel = std::min(libSel, std::max(0, (int)library.size() - 1));
 }
 
-static void enter() {
-    sel = 0;
-    showInventory = false;
-    showText = false;
+/// (Re)lit le son du moment en cours depuis le début (touche e).
+static void replay() {
     const Node* n = engine->node;
     scenePlaying = false;
     audio.stop();
     if (n && !n->audio.empty() && audio.open(storyDir + "/" + n->audio)) scenePlaying = n->type == "scene";
     dirty = true;
+}
+
+static void enter() {
+    sel = 0;
+    showInventory = false;
+    showText = false;
+    replay();
 }
 
 static void playOption() {
@@ -453,6 +458,7 @@ void loop() {
                 const Node* n = engine->node;
                 if (engine->status == PLAYING && n->type == "choice" && c - '1' < (int)n->options.size()) { engine->choose(c - '1'); enter(); }
             } else if (engine && c == 'r') { engine->start(); enter(); }
+            else if (engine && c == 'e') replay();
             else if (engine && c == 'i') { showInventory = !showInventory; dirty = true; }
             else if (engine && c == 't') { showText = !showText; dirty = true; }
             else if (!engine && langSel < 0 && c == 'l') { langSel = englishFlag() ? 1 : 0; dirty = true; }

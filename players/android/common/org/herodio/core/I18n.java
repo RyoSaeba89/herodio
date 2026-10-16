@@ -50,6 +50,7 @@ public final class I18n {
         en("Sac : {}", "Bag: {}");
         en("Suivant  ▶", "Next  ▶");
         en("Rejouer", "Play again");
+        en("♪ Réécouter", "♪ Listen again");
         en("Choix {}", "Choice {}");
         en("Oups !", "Oops!");
         en("Fin", "The end");

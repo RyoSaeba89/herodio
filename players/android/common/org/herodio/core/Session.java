@@ -3,6 +3,9 @@ package org.herodio.core;
 import java.io.File;
 import java.io.FileInputStream;
 
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioTrack;
 import android.media.MediaPlayer;
 
 import static org.herodio.core.I18n.tr;
@@ -20,6 +23,11 @@ public final class Session implements MediaPlayer.OnCompletionListener {
     /** Lecture enchaînée du texte puis de chaque réponse ; coupée dès qu'on choisit soi-même une réponse. */
     private boolean chain;
     private MediaPlayer player;
+    /**
+     * Silence joué en boucle dès le premier son : la sortie audio ne se met plus en veille entre deux sons.
+     * Au réveil, certains téléphones et casques Bluetooth remontent le volume progressivement et le début du son était trop faible.
+     */
+    private AudioTrack silence;
     private final Listener listener;
 
     public Session(File dir, Engine.Story story, Listener listener) {
@@ -46,10 +54,24 @@ public final class Session implements MediaPlayer.OnCompletionListener {
         return k <= options().length ? engine.node.options[k - 1].audio : null;
     }
 
+    /** Relit le moment en cours depuis le début : le texte, puis chaque réponse. */
+    public void replay() {
+        selected = 0;
+        chain = true;
+        readFrom(0);
+        listener.onChange();
+    }
+
+    /** Le moment en cours a-t-il au moins un son ? */
+    public boolean hasAudio() {
+        for (int k = 0; k <= options().length; k++) if (itemAudio(k) != null) return true;
+        return false;
+    }
+
     /** Lit le premier élément sonore à partir de k, en surlignant la réponse lue. */
     private void readFrom(int k) {
         reading = -1;
-        stop();
+        stopSound();
         for (; k <= options().length; k++) {
             if (play(itemAudio(k))) {
                 reading = k;
@@ -62,10 +84,11 @@ public final class Session implements MediaPlayer.OnCompletionListener {
 
     /** Joue un son du pack ; renvoie false s'il n'y en a pas ou s'il est illisible. */
     private boolean play(String rel) {
-        stop();
+        stopSound();
         if (rel == null || rel.contains("..") || rel.startsWith("/")) return false;
         File f = new File(dir, rel);
         if (!f.isFile()) return false;
+        keepAwake();
         try {
             player = new MediaPlayer();
             // Descripteur ouvert par l'application : le service média n'a pas accès à ses fichiers privés.
@@ -76,8 +99,23 @@ public final class Session implements MediaPlayer.OnCompletionListener {
             player.start();
             return true;
         } catch (Exception e) {
-            stop();
+            stopSound();
             return false;
+        }
+    }
+
+    private void keepAwake() {
+        if (silence != null) return;
+        int n = 22050; // une seconde en 16 bits mono
+        AudioTrack t = null;
+        try {
+            t = new AudioTrack(AudioManager.STREAM_MUSIC, n, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, n * 2, AudioTrack.MODE_STATIC);
+            t.write(new short[n], 0, n);
+            t.setLoopPoints(0, n, -1);
+            t.play();
+            silence = t;
+        } catch (Exception e) {
+            if (t != null) t.release(); // sans piste silencieuse, les sons sont joués quand même
         }
     }
 
@@ -88,14 +126,23 @@ public final class Session implements MediaPlayer.OnCompletionListener {
     public void onCompletion(MediaPlayer mp) {
         if (mp != player) return;
         int k = reading;
-        stop();
+        stopSound();
         reading = -1;
         if (k >= 0 && "scene".equals(engine.node.type)) { next(); return; }
         if (k >= 0 && chain) readFrom(k + 1);
         listener.onChange();
     }
 
+    /** Coupe tout, silence compris : on quitte l'histoire ou l'application passe en arrière-plan. */
     public void stop() {
+        stopSound();
+        if (silence != null) {
+            silence.release();
+            silence = null;
+        }
+    }
+
+    private void stopSound() {
         if (player != null) {
             try { player.stop(); } catch (IllegalStateException ignored) {}
             player.release();

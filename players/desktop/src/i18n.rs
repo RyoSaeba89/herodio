@@ -58,8 +58,9 @@ fn en(fr: &str) -> Option<&'static str> {
         "◀  Mes histoires" => "◀  My stories",
         "Suivant  ▶" => "Next  ▶",
         "⟲  Rejouer" => "⟲  Play again",
-        "Flèches : choisir · Entrée : valider · 1-9 : réponse directe · R : recommencer · Échap : retour · F11 : plein écran" =>
-            "Arrows: choose · Enter: confirm · 1-9: pick an answer · R: start again · Esc: back · F11: full screen",
+        "🔊 Réécouter" => "🔊 Listen again",
+        "Flèches : choisir · Entrée : valider · 1-9 : réponse directe · E : réécouter · R : recommencer · Échap : retour · F11 : plein écran" =>
+            "Arrows: choose · Enter: confirm · 1-9: pick an answer · E: listen again · R: start again · Esc: back · F11: full screen",
         "Choix {}" => "Choice {}",
         "Oups !" => "Oops!",
         "Cette histoire tourne en rond sans fin. Demande à son auteur de la vérifier." => "This story goes round in circles forever. Ask its author to check it.",
@@ -70,8 +71,8 @@ fn en(fr: &str) -> Option<&'static str> {
         "Fin secrète !" => "Secret ending!",
         // Mode console
         "Sac : {}" => "Bag: {}",
-        "[Entrée] suivant   [Échap] menu" => "[Enter] next   [Esc] menu",
-        "[↑↓] choisir  [Entrée] valider  [Échap] menu" => "[↑↓] choose  [Enter] confirm  [Esc] menu",
+        "[Entrée] suivant  [E] réécouter  [Échap] menu" => "[Enter] next  [E] listen again  [Esc] menu",
+        "[↑↓] choisir  [Entrée] valider  [E] réécouter  [Échap] menu" => "[↑↓] choose  [Enter] confirm  [E] listen again  [Esc] menu",
         "[Entrée] rejouer   [Échap] menu" => "[Enter] play again   [Esc] menu",
         "== HERODIO - Mes histoires ==" => "== HERODIO - My stories ==",
         "Aucune histoire. Copie des fichiers .aistory dans {}" => "No stories. Copy .aistory files into {}",

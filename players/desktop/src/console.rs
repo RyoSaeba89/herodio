@@ -92,8 +92,8 @@ fn run_inner(open: Option<PathBuf>, lang_chosen: bool, audio: &mut Audio) -> std
                 if !inv.is_empty() { l.push(fill(tr("Sac : {}"), &[&inv.join(", ")])); }
                 l.push(String::new());
                 l.push(match s.engine.status {
-                    Status::Playing if s.options().is_empty() => tr("[Entrée] suivant   [Échap] menu").into(),
-                    Status::Playing => tr("[↑↓] choisir  [Entrée] valider  [Échap] menu").into(),
+                    Status::Playing if s.options().is_empty() => tr("[Entrée] suivant  [E] réécouter  [Échap] menu").into(),
+                    Status::Playing => tr("[↑↓] choisir  [Entrée] valider  [E] réécouter  [Échap] menu").into(),
                     _ => tr("[Entrée] rejouer   [Échap] menu").into(),
                 });
                 draw(&l)?;
@@ -107,6 +107,7 @@ fn run_inner(open: Option<PathBuf>, lang_chosen: bool, audio: &mut Audio) -> std
                     KeyCode::Enter | KeyCode::Char(' ') => s.confirm(audio),
                     KeyCode::Char(c @ '1'..='9') => s.choose(c as usize - '1' as usize, audio),
                     KeyCode::Char('r') => s.restart(audio),
+                    KeyCode::Char('e') => s.replay(audio),
                     KeyCode::Esc | KeyCode::Backspace => { audio.stop(); session = None; library = pack::scan(&lib); }
                     _ => {}
                 }
