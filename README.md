@@ -8,6 +8,24 @@ Tout fonctionne **hors ligne**, sans compte et sans abonnement.
 
 > **Version 0.2.2-alpha** : version d'essai, en français et en anglais. Le Studio et les lecteurs PC et Android sont testés ; le Cardputer et le vrai Raspberry Pi n'ont pas encore été essayés sur l'appareil ; les premiers essais sur un vrai Xperia Play et un smartphone ont mené aux correctifs Android de la 0.2.2, à revalider sur l'appareil (voir [État du projet](#état-du-projet)).
 
+## Aperçu
+
+![Le Studio : on relie des blocs colorés pour construire l’histoire (ici « Le château mystérieux »).](docs/captures/studio-editeur-fr.png)
+<sub>Le Studio : on relie des blocs colorés pour construire l’histoire (ici « Le château mystérieux »).</sub>
+
+<table>
+<tr>
+<td width="50%"><img src="docs/captures/studio-accueil-fr.png" alt="L’accueil du Studio : 8 histoires prêtes à jouer ou à modifier."><br><sub>L’accueil du Studio : 8 histoires prêtes à jouer ou à modifier.</sub></td>
+<td width="50%"><img src="docs/captures/studio-jouer-fr.png" alt="On essaie son histoire directement dans le Studio."><br><sub>On essaie son histoire directement dans le Studio.</sub></td>
+</tr>
+<tr>
+<td><img src="docs/captures/lecteur-pc-bibliotheque-fr.png" alt="Le lecteur PC et Raspberry Pi : la bibliothèque."><br><sub>Le lecteur PC et Raspberry Pi : la bibliothèque.</sub></td>
+<td><img src="docs/captures/lecteur-pc-fr.png" alt="Un choix à faire : le texte puis chaque réponse sont lus à voix haute."><br><sub>Un choix à faire : le texte puis chaque réponse sont lus à voix haute.</sub></td>
+</tr>
+</table>
+
+<p align="center"><img src="docs/captures/android-fr.png" width="280" alt="Le lecteur Android, ici sur Android 14 (il fonctionne aussi sur un Xperia Play sous Android 2.3)."><br><sub>Le lecteur Android, ici sur Android 14 (il fonctionne aussi sur un Xperia Play sous Android 2.3).</sub></p>
+
 ## Télécharger
 
 Tous les fichiers sont sur la page [Releases](https://github.com/RyoSaeba89/herodio/releases) :

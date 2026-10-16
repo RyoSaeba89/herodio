@@ -8,6 +8,24 @@ Everything works **offline**, with no account and no subscription.
 
 > **Version 0.2.2-alpha**: a test version, in French and English. The Studio and the PC and Android players are tested; the Cardputer and a real Raspberry Pi have not been tried on the device yet; first tries on a real Xperia Play and a smartphone led to the Android fixes in 0.2.2, to be checked again on the device (see [Project status](#project-status)).
 
+## Preview
+
+![The Studio: link colourful blocks to build the story (here “The mysterious castle”).](docs/captures/studio-editeur-en.png)
+<sub>The Studio: link colourful blocks to build the story (here “The mysterious castle”).</sub>
+
+<table>
+<tr>
+<td width="50%"><img src="docs/captures/studio-accueil-en.png" alt="The Studio’s home screen: 8 stories ready to play or change."><br><sub>The Studio’s home screen: 8 stories ready to play or change.</sub></td>
+<td width="50%"><img src="docs/captures/studio-jouer-en.png" alt="Try your story right inside the Studio."><br><sub>Try your story right inside the Studio.</sub></td>
+</tr>
+<tr>
+<td><img src="docs/captures/lecteur-pc-bibliotheque-en.png" alt="The PC and Raspberry Pi player: the library."><br><sub>The PC and Raspberry Pi player: the library.</sub></td>
+<td><img src="docs/captures/lecteur-pc-en.png" alt="A choice to make: the text and then each answer are read aloud."><br><sub>A choice to make: the text and then each answer are read aloud.</sub></td>
+</tr>
+</table>
+
+<p align="center"><img src="docs/captures/android-en.png" width="280" alt="The Android player, here on Android 14 (it also runs on an Xperia Play with Android 2.3)."><br><sub>The Android player, here on Android 14 (it also runs on an Xperia Play with Android 2.3).</sub></p>
+
 ## Download
 
 All the files are on the [Releases](https://github.com/RyoSaeba89/herodio/releases) page:
