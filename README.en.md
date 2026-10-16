@@ -6,7 +6,7 @@ Herodio lets a child (roughly 7 to 14 years old), a teacher or a youth leader **
 
 Everything works **offline**, with no account and no subscription.
 
-> **Version 0.2.2-alpha**: a test version, in French and English. The Studio and the PC and Android players are tested; a real Raspberry Pi has not been tried on the device yet; first tries on a real Xperia Play and a smartphone led to the Android fixes in 0.2.2, to be checked again on the device (see [Project status](#project-status)).
+> **Version 0.2.3-alpha**: a test version, in French and English. The Studio and the PC and Android players are tested; a real Raspberry Pi has not been tried on the device yet; first tries on a real Xperia Play and a smartphone led to the Android fixes in 0.2.2, to be checked again on the device (see [Project status](#project-status)).
 
 ## Preview
 

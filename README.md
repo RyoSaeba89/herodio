@@ -6,7 +6,7 @@ Herodio permet à un enfant (de 7 à 14 ans environ), à un enseignant ou à un 
 
 Tout fonctionne **hors ligne**, sans compte et sans abonnement.
 
-> **Version 0.2.2-alpha** : version d'essai, en français et en anglais. Le Studio et les lecteurs PC et Android sont testés ; le vrai Raspberry Pi n'a pas encore été essayés sur l'appareil ; les premiers essais sur un vrai Xperia Play et un smartphone ont mené aux correctifs Android de la 0.2.2, à revalider sur l'appareil (voir [État du projet](#état-du-projet)).
+> **Version 0.2.3-alpha** : version d'essai, en français et en anglais. Le Studio et les lecteurs PC et Android sont testés ; le vrai Raspberry Pi n'a pas encore été essayé sur l'appareil ; les premiers essais sur un vrai Xperia Play et un smartphone ont mené aux correctifs Android de la 0.2.2, à revalider sur l'appareil (voir [État du projet](#état-du-projet)).
 
 ## Aperçu
 
