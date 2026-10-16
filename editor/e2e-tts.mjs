@@ -6,6 +6,8 @@ const browser = await chromium.launch({ channel: 'msedge' });
 const page = await browser.newPage();
 page.on('pageerror', (e) => console.log('pageerror', e.message));
 page.on('console', (m) => m.type() === 'error' && console.log('console', m.text()));
+// Langue de l'interface (HERODIO_LANG=en pour l'anglais), sans passer par l'écran du premier démarrage.
+await page.addInitScript((l) => localStorage.setItem('herodio-lang', l), process.env.HERODIO_LANG ?? 'fr');
 await page.goto('http://localhost:1420');
 const r = await page.evaluate(async () => {
   const tts = await import('/src/audio/tts.ts');

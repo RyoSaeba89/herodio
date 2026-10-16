@@ -2,10 +2,11 @@
 // Chaque son multipiste est mixé ici, une fois pour toutes : les lecteurs n'ont qu'un seul fichier à lire à la fois.
 import { strToU8, zipSync, type Zippable } from 'fflate';
 import { autoVoiceSlots, withAutoVoices } from '../audio/autovoice';
-import { VOICE_CREDIT } from '../audio/tts';
+import { VOICES } from '../audio/tts';
 import { rasterize } from '../audio/images';
 import { getBlob } from '../audio/media';
 import { encodeWav, renderSound } from '../audio/mixer';
+import { dec, t } from '../i18n';
 import { compile } from '../model/compile';
 import { blockImage, hasAudio, soundDuration, soundSlots, type Project, type Sound } from '../model/project';
 
@@ -23,11 +24,11 @@ export interface Platform {
 }
 
 export const PLATFORMS: Platform[] = [
-  { id: 'windows', name: 'Windows', icon: '🪟', desc: 'Lecteur Herodio pour PC', sampleRate: 44100, output: 'pack', image: { w: 1280, h: 960, mode: 'fit' } },
-  { id: 'android', name: 'Android', icon: '📱', desc: 'Téléphones et tablettes récents', sampleRate: 44100, output: 'pack', image: { w: 1280, h: 960, mode: 'fit' } },
-  { id: 'rpi', name: 'Raspberry Pi', icon: '🍓', desc: 'Conteuse autonome', sampleRate: 44100, output: 'pack', image: { w: 1024, h: 768, mode: 'fit' } },
-  { id: 'android2', name: 'Android 2.3', icon: '📟', desc: 'Anciens téléphones (Xperia Play…)', sampleRate: 22050, output: 'pack', maxBytes: 150e6, image: { w: 640, h: 480, mode: 'fit' } },
-  { id: 'cardputer', name: 'Cardputer ADV', icon: '⌨️', desc: 'M5Stack, carte microSD', sampleRate: 16000, output: 'sd', maxBytes: 2e9, image: { w: 240, h: 135, mode: 'cover' } },
+  { id: 'windows', name: 'Windows', icon: '🪟', desc: t('Lecteur Herodio pour PC'), sampleRate: 44100, output: 'pack', image: { w: 1280, h: 960, mode: 'fit' } },
+  { id: 'android', name: 'Android', icon: '📱', desc: t('Téléphones et tablettes récents'), sampleRate: 44100, output: 'pack', image: { w: 1280, h: 960, mode: 'fit' } },
+  { id: 'rpi', name: 'Raspberry Pi', icon: '🍓', desc: t('Conteuse autonome'), sampleRate: 44100, output: 'pack', image: { w: 1024, h: 768, mode: 'fit' } },
+  { id: 'android2', name: 'Android 2.3', icon: '📟', desc: t('Anciens téléphones (Xperia Play…)'), sampleRate: 22050, output: 'pack', maxBytes: 150e6, image: { w: 640, h: 480, mode: 'fit' } },
+  { id: 'cardputer', name: 'Cardputer ADV', icon: '⌨️', desc: t('M5Stack, carte microSD'), sampleRate: 16000, output: 'sd', maxBytes: 2e9, image: { w: 240, h: 135, mode: 'cover' } },
 ];
 
 export const PACK_FORMAT_VERSION = 1;
@@ -62,24 +63,24 @@ export function estimate(p: Project, pf: Platform) {
 }
 
 export function slug(s: string) {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'histoire';
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || t('histoire');
 }
 
 /** Messages spécifiques à la plateforme choisie. */
 export function diagnose(p: Project, pf: Platform): string[] {
   const out: string[] = [];
   const est = estimate(p, pf);
-  if (pf.maxBytes && est.bytes > pf.maxBytes) out.push(`Le pack est très gros (${mb(est.bytes)}) pour ${pf.name} : raccourcis les sons ou retire des ambiances.`);
+  if (pf.maxBytes && est.bytes > pf.maxBytes) out.push(t('Le pack est très gros ({size}) pour {name} : raccourcis les sons ou retire des ambiances.', { size: mb(est.bytes), name: pf.name }));
   if (pf.id === 'cardputer') {
-    if (p.blocks.length > 400) out.push('Plus de 400 blocs : le Cardputer risque de manquer de mémoire.');
+    if (p.blocks.length > 400) out.push(t('Plus de 400 blocs : le Cardputer risque de manquer de mémoire.'));
     const longTitle = p.blocks.find((b) => 'title' in b && b.title.length > 40);
-    if (longTitle) out.push('Certains titres sont longs : ils seront coupés sur le petit écran du Cardputer.');
+    if (longTitle) out.push(t('Certains titres sont longs : ils seront coupés sur le petit écran du Cardputer.'));
   }
-  if (pf.id === 'android2' && est.seconds > 1800) out.push('Plus de 30 minutes de son : vérifie qu’il reste assez de place sur le vieux téléphone.');
+  if (pf.id === 'android2' && est.seconds > 1800) out.push(t('Plus de 30 minutes de son : vérifie qu’il reste assez de place sur le vieux téléphone.'));
   return out;
 }
 
-export const mb = (b: number) => `${(b / 1e6).toFixed(b < 1e7 ? 1 : 0).replace('.', ',')} Mo`;
+export const mb = (b: number) => `${dec(b / 1e6, b < 1e7 ? 1 : 0)} ${t('Mo')}`;
 
 export async function buildPack(p: Project, pf: Platform, progress: (done: number, total: number, step?: string) => void): Promise<{ name: string; bytes: Uint8Array }> {
   if (p.autoVoice) p = await withAutoVoices(p, (d, t) => progress(d, t, 'voix'));
@@ -94,7 +95,7 @@ export async function buildPack(p: Project, pf: Platform, progress: (done: numbe
     cover: p.cover ? images.get(p.cover) ?? null : null,
     color: p.color,
     duration: Math.round(unique.reduce((a, u) => a + soundDuration(u.sound), 0)),
-    credits: [...new Set([...(p.credits ?? []), ...(p.autoVoice ? [VOICE_CREDIT] : [])])],
+    credits: [...new Set([...(p.credits ?? []), ...(p.autoVoice ? [VOICES[p.lang ?? 'fr'].credit] : [])])],
     created: new Date().toISOString(), generator: 'Herodio Studio',
   };
   const root = pf.output === 'sd' ? `herodio/${slug(p.title)}-${p.id.slice(0, 4)}/` : '';
@@ -111,6 +112,6 @@ export async function buildPack(p: Project, pf: Platform, progress: (done: numbe
     if (data) files[root + unique[i].file] = [encodeWav(data, pf.sampleRate), { level: 0 }];
   }
   progress(unique.length, unique.length);
-  const ext = pf.output === 'sd' ? '-carte-sd.zip' : '.aistory';
+  const ext = pf.output === 'sd' ? t('-carte-sd.zip') : '.aistory';
   return { name: slug(p.title) + (pf.id === 'android2' ? '-android23' : pf.id === 'cardputer' ? '-cardputer' : '') + ext, bytes: zipSync(files) };
 }

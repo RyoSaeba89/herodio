@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { addImage, IMAGE_ACCEPT, imageUrl } from '../audio/images';
 import { pickFiles } from '../io/files';
+import { t } from '../i18n';
 import { useStore } from '../store';
 
 /** Choisir une illustration : importer un fichier, prendre une image de la bibliothèque ou glisser-déposer. */
-export function ImageSlot({ value, onChange, label = 'Illustration' }: { value: string | null; onChange: (id: string | null) => void; label?: string }) {
+export function ImageSlot({ value, onChange, label = t('Illustration') }: { value: string | null; onChange: (id: string | null) => void; label?: string }) {
   const media = useStore((s) => s.project.media);
   const images = media.filter((m) => m.category === 'image');
   const [error, setError] = useState('');
@@ -26,11 +27,11 @@ export function ImageSlot({ value, onChange, label = 'Illustration' }: { value: 
 
   return (
     <div className={'image-slot' + (over ? ' over' : '')} onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={onDrop}>
-      {value && imageUrl(value) ? <img src={imageUrl(value)} alt={label} /> : <div className="image-empty">🖼️ Pas encore d’image</div>}
+      {value && imageUrl(value) ? <img src={imageUrl(value)} alt={label} /> : <div className="image-empty">🖼️ {t('Pas encore d’image')}</div>}
       <div className="slot-row">
-        <button className="btn" onClick={importFile}>📁 Importer</button>
-        {images.length > 0 && <button className="btn ghost" onClick={() => setPicking(!picking)}>🗂️ Bibliothèque</button>}
-        {value && <button className="btn ghost" onClick={() => onChange(null)} title="Retirer l’image">🗑️</button>}
+        <button className="btn" onClick={importFile}>📁 {t('Importer')}</button>
+        {images.length > 0 && <button className="btn ghost" onClick={() => setPicking(!picking)}>🗂️ {t('Bibliothèque')}</button>}
+        {value && <button className="btn ghost" onClick={() => onChange(null)} title={t('Retirer l’image')}>🗑️</button>}
       </div>
       {picking && (
         <div className="image-pick">

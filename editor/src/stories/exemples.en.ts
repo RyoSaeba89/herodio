@@ -1,0 +1,75 @@
+// English version of the three tutorial stories (same blocks and media as exemples.ts).
+import type { StoryText } from './dsl';
+
+export const premiereEn: StoryText = {
+  title: 'My first story',
+  description: 'A start, a scene, two choices and two endings: the simplest way to begin.',
+  notion: 'Sequence and choice',
+  nodes: {
+    reveil: ['Waking up',
+      'This morning, the sun is shining. A little cat is scratching at your window: it looks like it wants to show you something!'],
+    choix: ['What do you do?',
+      'Do you want to follow the cat into the garden, or stay warm and cosy in your bed?',
+      ['Follow the cat', 'Stay in bed']],
+    tresor: ['The garden treasure',
+      'The cat leads you to an old chest hidden under the apple tree. Inside: marbles of every colour! What a wonderful day.'],
+    dodo: ['Back to sleep',
+      'You fall asleep again… and you dream of a cat still waiting for you outside. Maybe another time?'],
+  },
+};
+
+export const chateauEn: StoryText = {
+  title: 'The mysterious castle',
+  description: 'A key, a locked door and several endings, including a secret one.',
+  notion: 'Item and condition',
+  items: { cle: 'Golden key' },
+  nodes: {
+    arrivee: ['In front of the castle',
+      'You arrive in front of a huge castle. Its towers disappear into the clouds, and a big wooden door blocks your way.'],
+    carrefour: ['Where to go?', 'What do you decide?',
+      ['Go into the castle', 'Explore the forest', 'Go back to the village']],
+    fermee: ['The door is locked',
+      'You push the door with all your strength… it is locked! You would need a key.'],
+    foret: ['In the forest',
+      'You walk among the tall trees. Something is shining at the foot of an oak tree…'],
+    cle: ['A key!',
+      'It is a golden key! You put it carefully in your bag.'],
+    ouverte: ['The door opens',
+      'Click! The key turns in the lock. You walk into a hall full of tapestries.'],
+    escaliers: ['Inside the castle',
+      'One staircase goes up to the tower, another goes down to the cellar.',
+      ['Climb up the tower', 'Go down to the cellar']],
+    tour: ['The treasure in the tower',
+      'At the very top of the tower, a chest full of gold coins is waiting for you. You are rich!'],
+    cave: ['The secret passage',
+      'In the cellar, a secret passage leads… straight to the castle’s magic library! You have found the secret ending.'],
+    village: ['Back to the village',
+      'You go back to the village. The castle will keep its secrets… for now.'],
+  },
+};
+
+export const foretEn: StoryText = {
+  title: 'The enchanted forest',
+  description: 'An audio story with narration, sound effects and background music.',
+  notion: 'Audio mixing',
+  nodes: {
+    oree: ['At the edge of the forest',
+      'Here you are at the edge of the enchanted forest. The wind sings in the leaves, and the birds welcome you.'],
+    chemin: ['The path splits',
+      'In front of you, the path splits in two. Do you want to follow the fireflies, or listen to the old owl?',
+      ['Follow the fireflies', 'Listen to the old owl']],
+    lucioles: ['The fireflies',
+      'The little lights dance around you and guide you to a clearing. A tiny fairy is waiting for you, sitting on a mushroom.'],
+    fee: ['The fairy’s potion',
+      'The fairy holds out a glowing potion: “Drink it, and you will be able to talk to animals.” Do you accept?',
+      ['Accept the potion', 'Say no politely']],
+    animaux: ['Friend of the animals',
+      'You drink the potion. Suddenly, a squirrel says hello to you! From now on, all the animals of the forest are your friends.'],
+    maison: ['Back home',
+      'You thank the fairy and go back home. The forest will still be there, waiting for you, for your next adventure.'],
+    hibou: ['The old owl',
+      'Hoo hoo! The old owl opens one eye. “I will tell you a secret,” he whispers. “In the heart of the forest, a giant tree keeps all the dreams of children.”'],
+    secret: ['The secret of the forest',
+      'You have discovered the secret of the enchanted forest. Shh! Don’t tell anyone.'],
+  },
+};

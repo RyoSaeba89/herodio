@@ -2,6 +2,7 @@
 // Narration : public/examples/<id>/voix/<empreinte du texte>.ogg (générée par scripts/gen-narration.mjs avec la voix automatique).
 // Illustrations : public/examples/<id>/img/<nom>.svg ; bruitages et musiques communs : public/examples/sons/<nom>.ogg.
 import type { CmpOp, EndKind } from '../engine/engine';
+import type { Lang } from '../i18n';
 
 /** Bruitage : [nom, début (s), volume]. */
 export type Fx = [string, number?, number?];
@@ -21,6 +22,8 @@ export type Def =
 
 export interface StoryDef {
   id: string;
+  /** Langue des textes (français par défaut). */
+  lang?: Lang;
   title: string;
   description: string;
   color: string;
@@ -34,6 +37,40 @@ export interface StoryDef {
   variables?: { id: string; name: string; initial: number }[];
   start: string;
   nodes: Record<string, Def>;
+}
+
+/** Traduction d'une histoire : mêmes blocs, mêmes médias, autres textes.
+ *  nodes[clé] = [titre, texte] pour une scène ou une fin, [titre, question, réponses] pour un choix. */
+export interface StoryText {
+  title: string;
+  description: string;
+  notion: string;
+  source?: string;
+  items?: Record<string, string>;
+  variables?: Record<string, string>;
+  nodes: Record<string, [string, string] | [string, string, string[]]>;
+}
+
+/** Applique une traduction ; échoue si un texte manque, pour qu'aucune histoire ne soit à moitié traduite. */
+export function localize(def: StoryDef, lang: Lang, tr: StoryText): StoryDef {
+  const miss = (what: string) => { throw new Error(`${def.id} (${lang}) : traduction manquante pour ${what}`); };
+  const nodes: Record<string, Def> = {};
+  for (const [k, n] of Object.entries(def.nodes)) {
+    if (n.k !== 'scene' && n.k !== 'choice' && n.k !== 'end') { nodes[k] = n; continue; }
+    const x = tr.nodes[k] ?? miss(k);
+    if (n.k === 'choice') {
+      const opts = x[2];
+      if (!opts || opts.length !== n.options.length) miss(`${k} (réponses)`);
+      nodes[k] = { ...n, title: x[0], text: x[1], options: n.options.map(([, to], i) => [opts![i], to]) };
+    } else nodes[k] = { ...n, title: x[0], text: x[1] };
+  }
+  for (const k of Object.keys(tr.nodes)) if (!(k in def.nodes)) miss(`${k} (bloc inconnu)`);
+  return {
+    ...def, lang, title: tr.title, description: tr.description, notion: tr.notion, source: def.source && (tr.source ?? miss('source')),
+    items: def.items?.map((i) => ({ ...i, name: tr.items?.[i.id] ?? miss(i.id) })),
+    variables: def.variables?.map((v) => ({ ...v, name: tr.variables?.[v.id] ?? miss(v.id) })),
+    nodes,
+  };
 }
 
 // Petits constructeurs, pour des définitions lisibles.

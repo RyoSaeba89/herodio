@@ -1,5 +1,7 @@
 # Le moteur narratif Herodio
 
+*[English version](moteur.en.md)*
+
 Une histoire se crée une seule fois et doit se jouer **exactement de la même façon** sur tous les appareils. Pour cela, chaque lecteur embarque sa propre copie du moteur. Ces copies suivent toutes les mêmes règles, qui sont décrites ici et vérifiées par des tests communs.
 
 | Implémentation | Fichier | Utilisée par |

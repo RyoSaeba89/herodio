@@ -3,6 +3,7 @@
 use rodio::{Decoder, DeviceSinkBuilder, MixerDeviceSink, Player, Source};
 use std::io::Cursor;
 use std::time::Instant;
+use crate::i18n::{fill, tr};
 
 pub struct Audio {
     sink: Option<MixerDeviceSink>,
@@ -16,7 +17,7 @@ impl Audio {
     /// Sans carte son, le lecteur fonctionne quand même (en silence).
     pub fn new() -> Audio {
         if std::env::var_os("HERODIO_MUET").is_some() { return Audio::muted(); }
-        let sink = DeviceSinkBuilder::open_default_sink().map_err(|e| eprintln!("Pas de sortie audio : {e}")).ok().map(|mut s| {
+        let sink = DeviceSinkBuilder::open_default_sink().map_err(|e| eprintln!("{}", fill(tr("Pas de sortie audio : {}"), &[&e.to_string()]))).ok().map(|mut s| {
             s.log_on_drop(false);
             s
         });
@@ -49,7 +50,7 @@ impl Audio {
                 p.append(src);
                 self.player = Some(p);
             }
-            Err(e) => eprintln!("Son illisible : {e}"),
+            Err(e) => eprintln!("{}", fill(tr("Son illisible : {}"), &[&e.to_string()])),
         }
     }
 

@@ -1,5 +1,6 @@
 // Lecture d'un seul son à la fois, et enregistrement au microphone.
 import { useSyncExternalStore } from 'react';
+import { t } from '../i18n';
 import type { Sound } from '../model/project';
 import { audioContext } from './media';
 import { renderSound } from './mixer';
@@ -87,7 +88,7 @@ export async function startRecording() {
 export function stopRecording(): Promise<Blob> {
   const r = rec;
   rec = null;
-  if (!r) return Promise.reject(new Error('Aucun enregistrement en cours'));
+  if (!r) return Promise.reject(new Error(t('Aucun enregistrement en cours')));
   return new Promise((resolve) => {
     r.mr.onstop = () => {
       r.stream.getTracks().forEach((t) => t.stop());

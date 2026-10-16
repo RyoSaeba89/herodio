@@ -6,11 +6,11 @@ import { compile } from '../model/compile';
 import { validate } from '../model/validate';
 import { projectFromDef } from './build';
 import { imagesOf, narrationTexts, soundsOf, textHash } from './dsl';
-import { STORIES } from './index';
+import { ALL_STORIES } from './index';
 
 const pub = join(__dirname, '../../public/examples');
 
-describe.each(STORIES.map((s) => [s.title, s] as const))('%s', (_, def) => {
+describe.each(ALL_STORIES.map((s) => [`${s.title} (${s.lang ?? 'fr'})`, s] as const))('%s', (_, def) => {
   const p = projectFromDef(def, (kind, name) => ({ id: `${kind}-${name}`, duration: 3 }));
   p.media = [];
 

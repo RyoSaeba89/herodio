@@ -1,4 +1,4 @@
-// Génère la narration des histoires fournies avec la voix automatique d'Herodio (Piper, voix Siwis),
+// Génère la narration des histoires fournies avec la voix automatique d'Herodio (Piper : Siwis en français, LJ Speech en anglais),
 // en utilisant exactement le moteur de l'éditeur, dans Edge sans fenêtre.
 // Prérequis : `npm run dev` lancé. Usage : node scripts/gen-narration.mjs
 import { chromium } from 'playwright-core';
@@ -12,9 +12,10 @@ const browser = await chromium.launch({ channel: 'msedge' });
 const page = await browser.newPage();
 await page.goto('http://localhost:1420');
 const jobs = await page.evaluate(async () => {
-  const { STORIES } = await import('/src/stories/index.ts');
+  const { ALL_STORIES } = await import('/src/stories/index.ts');
   const { narrationTexts, textHash } = await import('/src/stories/dsl.ts');
-  return STORIES.flatMap((s) => narrationTexts(s).map((text) => ({ story: s.id, text, hash: textHash(text) })));
+  const { VOICES } = await import('/src/audio/tts.ts');
+  return ALL_STORIES.flatMap((s) => narrationTexts(s).map((text) => ({ story: s.id, text, hash: textHash(text), voice: VOICES[s.lang ?? 'fr'].id })));
 });
 const tmp = mkdtempSync(join(tmpdir(), 'herodio-voix-'));
 let done = 0;
@@ -23,10 +24,10 @@ for (const j of jobs) {
   const out = join(dir, j.hash + '.ogg');
   if (existsSync(out)) continue;
   mkdirSync(dir, { recursive: true });
-  const bytes = await page.evaluate(async (text) => {
+  const bytes = await page.evaluate(async ({ text, voice }) => {
     const { synthesize } = await import('/src/audio/tts.ts');
-    return Array.from(new Uint8Array(await (await synthesize(text)).arrayBuffer()));
-  }, j.text);
+    return Array.from(new Uint8Array(await (await synthesize(text, voice)).arrayBuffer()));
+  }, j);
   const wav = join(tmp, j.hash + '.wav');
   writeFileSync(wav, Buffer.from(bytes));
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', wav, '-c:a', 'libvorbis', '-q:a', '4', out]);

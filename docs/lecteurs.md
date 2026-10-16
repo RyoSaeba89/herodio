@@ -1,11 +1,16 @@
 # Installer et utiliser les lecteurs
 
+*[English version](lecteurs.en.md)*
+
 Dans Herodio Studio, **📦 Exporter mon histoire** puis choisir l'appareil. Chaque lecteur lit le même format, décrit dans [format.md](format.md).
+
+**Langue** : au premier démarrage, chaque lecteur demande la langue de l'interface, français ou anglais. On la change ensuite avec le bouton 🌐 de la bibliothèque (PC), le bouton « English » / « Français » (Android), la touche `L` (mode console) ou `l` (Cardputer). Une histoire garde sa propre langue : les versions anglaises des 8 histoires fournies sont dans les fichiers `stories-en-….zip` de la release.
 
 ## Windows
 
 - **Version portable** : `herodio-player.exe` accompagné d'un dossier `histoires` placé à côté. Copier les `.aistory` dans ce dossier ; rien n'est installé sur le PC.
 - Sans dossier `histoires` à côté du programme, la bibliothèque est `%USERPROFILE%\Herodio\histoires`.
+- La langue choisie est gardée dans `langue.txt`, dans le dossier de la bibliothèque.
 - À chaque étape, le texte puis chaque réponse sont lus à la suite, et ce qui est lu est surligné ; dès qu'on choisit soi-même une réponse, la lecture enchaînée s'arrête. La fenêtre s'adapte à sa taille (tout s'agrandit ou rétrécit avec elle).
 - On peut aussi **glisser un `.aistory` dans la fenêtre** (il est copié dans la bibliothèque) ou le passer en argument (`herodio-player.exe histoire.aistory`, ou « Ouvrir avec… »).
 
@@ -27,7 +32,7 @@ Compilation : `cd players/desktop && cargo build --release` → `target/release/
 Le même programme fonctionne sur Raspberry Pi, de deux façons :
 
 - **avec bureau** : fenêtre graphique, comme sous Windows ;
-- **sans bureau** (Raspberry Pi OS Lite, petit écran, Pi Zero 2) : `herodio-player --console`. L'interface s'affiche alors en mode texte dans la console, sans navigateur ni serveur graphique.
+- **sans bureau** (Raspberry Pi OS Lite, petit écran, Pi Zero 2) : `herodio-player --console`. L'interface s'affiche alors en mode texte dans la console, sans navigateur ni serveur graphique. Au premier démarrage, `1` choisit le français et `2` l'anglais (ou ↑ ↓ puis Entrée) ; `L` change de langue depuis la bibliothèque.
 
 ### Compilation sur le Pi
 
@@ -82,7 +87,7 @@ Chaque bouton se branche entre la broche GPIO et la masse. Les codes utilisés s
 
 ## Android (de 2.3 à 14) — un seul APK
 
-`players/android/build/herodio.apk` (60 Ko) s'installe aussi bien sur un Xperia Play sous Android 2.3 que sur un téléphone récent. Aucun compte et aucun service Google ne sont nécessaires.
+`players/android/build/herodio.apk` (environ 75 Ko) s'installe aussi bien sur un Xperia Play sous Android 2.3 que sur un téléphone récent. Aucun compte et aucun service Google ne sont nécessaires.
 
 - **Android 4.4 et plus** : bouton **« + Ajouter une histoire »**, puis choisir le `.aistory` (Téléchargements, carte SD, clé USB…). On peut aussi utiliser « Ouvrir avec Herodio » depuis un gestionnaire de fichiers.
 - **Android 2.3 à 4.3** : copier les `.aistory` dans le dossier **`Herodio`** à la racine de la carte SD, puis lancer l'application. Les nouveaux fichiers sont importés automatiquement. « Ouvrir avec » fonctionne aussi.
@@ -92,6 +97,7 @@ Chaque bouton se branche entre la broche GPIO et la masse. Les codes utilisés s
   - Retour (rond du Xperia Play) ;
   - chiffres 1 à 9 sur les appareils qui ont un clavier.
 - **Supprimer une histoire** : appui long sur l'histoire.
+- **Langue** : demandée au premier lancement (toucher, D-pad ou touches 1 et 2), puis bouton « English » / « Français » en haut de la bibliothèque.
 
 Il faut autoriser l'installation d'applications de sources inconnues (« Sources inconnues » dans les paramètres d'Android 2.3).
 
@@ -102,7 +108,7 @@ Sans réglage, l'APK est signé avec une clé de test créée sur place (`herodi
 ## M5Stack Cardputer / Cardputer ADV
 
 1. Exporter pour **Cardputer ADV**, puis décompresser l'archive à la **racine** de la carte microSD (FAT32). Un dossier `herodio/` apparaît, avec un sous-dossier par histoire.
-2. Installer le firmware (une seule fois). Le plus simple : flasher l'image `herodio-cardputer-….bin` de la [release](https://github.com/RyoSaeba89/herodio/releases) à l'adresse **0x0**, depuis Chrome ou Edge avec [ESP Web Flasher](https://espressif.github.io/esptool-js/), ou avec `esptool.py --chip esp32s3 write_flash 0x0 herodio-cardputer-0.2.0-alpha.bin`. Ou bien compiler depuis les sources :
+2. Installer le firmware (une seule fois). Le plus simple : flasher l'image `herodio-cardputer-….bin` de la [release](https://github.com/RyoSaeba89/herodio/releases) à l'adresse **0x0**, depuis Chrome ou Edge avec [ESP Web Flasher](https://espressif.github.io/esptool-js/), ou avec `esptool.py --chip esp32s3 write_flash 0x0 herodio-cardputer-0.2.1-alpha.bin`. Ou bien compiler depuis les sources :
 
    ```sh
    pip install platformio
@@ -111,7 +117,7 @@ Sans réglage, l'APK est signé avec une clé de test créée sur place (`herodi
    ```
 
    Si le téléversement ne démarre pas, maintenir le bouton **G0** en branchant le câble.
-3. Insérer la carte et allumer. La bibliothèque affiche la couverture de chaque histoire ; on change d'histoire avec `;` `.` et on l'écoute avec `OK`.
+3. Insérer la carte et allumer. Au premier démarrage, choisir la langue (`1` français, `2` anglais, ou `;` `.` puis `OK`) ; elle est gardée dans la mémoire du Cardputer. La bibliothèque affiche la couverture de chaque histoire ; on change d'histoire avec `;` `.` et on l'écoute avec `OK`.
 
 | Touche | Action |
 |---|---|
@@ -123,5 +129,6 @@ Sans réglage, l'APK est signé avec une clé de test créée sur place (`herodi
 | `i` | afficher le sac |
 | `t` | basculer entre l'illustration et le texte |
 | `-` `=` | volume |
+| `l` | changer de langue (dans la bibliothèque) |
 
 Le son sort par le haut-parleur, ou par la prise casque sur l'ADV.

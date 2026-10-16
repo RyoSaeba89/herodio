@@ -3,6 +3,7 @@ import { playSound, stop, usePlayingKey } from '../audio/player';
 import { autoSound } from '../audio/tts';
 import { imageUrl } from '../audio/images';
 import { Engine } from '../engine/engine';
+import { t } from '../i18n';
 import { compile } from '../model/compile';
 import { soundSlots, type Sound } from '../model/project';
 import { useStore } from '../store';
@@ -86,16 +87,16 @@ export function PlayPanel() {
   return (
     <section className="play" style={{ borderTopColor: project.color }}>
       <div className="play-main">
-        {e.status === 'error' && <div className="play-card error-card"><h2>🌀 Boucle infinie !</h2><p>Des blocs se renvoient l’un à l’autre sans jamais s’arrêter sur une scène ou un choix.</p></div>}
-        {e.status === 'end' && !n && <div className="play-card"><h2>🛑 L’histoire s’arrête ici</h2><p>Aucun bloc n’est relié après celui-ci.</p></div>}
+        {e.status === 'error' && <div className="play-card error-card"><h2>🌀 {t('Boucle infinie !')}</h2><p>{t('Des blocs se renvoient l’un à l’autre sans jamais s’arrêter sur une scène ou un choix.')}</p></div>}
+        {e.status === 'end' && !n && <div className="play-card"><h2>🛑 {t('L’histoire s’arrête ici')}</h2><p>{t('Aucun bloc n’est relié après celui-ci.')}</p></div>}
         <div className="play-row">
         {n && 'image' in n && n.image && imageUrl(n.image) && <img className="play-img" src={imageUrl(n.image)} alt="" />}
         {n && 'title' in n && (
           <div className={'play-card' + (playingKey === 'play' ? ' speaking' : '')}>
-            <h2>{end && <span className="emoji">{end.icon}</span>}{n.title}{end && <small> — fin {end.label.toLowerCase()}</small>}</h2>
+            <h2>{end && <span className="emoji">{end.icon}</span>}{n.title}{end && <small> — {t('fin {kind}', { kind: end.label.toLowerCase() })}</small>}</h2>
             {n.text && <p>{n.text}</p>}
             {playingKey === 'play' && <div className="eq"><span /><span /><span /><span /></div>}
-            {preparing && <div className="preparing">🗣️ La voix se prépare…</div>}
+            {preparing && <div className="preparing">🗣️ {t('La voix se prépare…')}</div>}
           </div>
         )}
         </div>
@@ -106,21 +107,21 @@ export function PlayPanel() {
               <span className="option-num">{i + 1}</span> {o.text}
             </button>
           ))}
-          {n?.type === 'scene' && <button className="btn primary" onClick={next}>⏭ Suivant</button>}
-          <button className="btn" onClick={restart}>🔄 {e.status === 'playing' ? 'Recommencer' : 'Rejouer'}</button>
-          <button className="btn ghost" onClick={() => useStore.getState().stopPlay()}>⏹ Arrêter</button>
+          {n?.type === 'scene' && <button className="btn primary" onClick={next}>⏭ {t('Suivant')}</button>}
+          <button className="btn" onClick={restart}>🔄 {e.status === 'playing' ? t('Recommencer') : t('Rejouer')}</button>
+          <button className="btn ghost" onClick={() => useStore.getState().stopPlay()}>{t('⏹ Arrêter')}</button>
         </div>
       </div>
       {advanced && (
         <div className="play-side">
           <div className="play-state">
-            <b>🎒 Sac :</b> {items.length ? items.map((i) => <span key={i!.id} className="chip">{i!.icon} {i!.name}</span>) : <i>vide</i>}
+            <b>🎒 {t('Sac :')}</b> {items.length ? items.map((i) => <span key={i!.id} className="chip">{i!.icon} {i!.name}</span>) : <i>{t('vide')}</i>}
           </div>
           {project.variables.length > 0 && (
             <div className="play-state"><b>🔢</b> {project.variables.map((v) => <span key={v.id} className="chip">{v.name} = {e.vars[v.id] ?? 0}</span>)}</div>
           )}
           <details>
-            <summary>🧪 État de départ pour « Jouer depuis ici »</summary>
+            <summary>🧪 {t('État de départ pour « Jouer depuis ici »')}</summary>
             {project.items.map((it) => (
               <label key={it.id} className="check">
                 <input type="checkbox" checked={testState.items.includes(it.id)} onChange={(ev) => useStore.setState({

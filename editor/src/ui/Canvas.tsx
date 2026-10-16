@@ -7,6 +7,7 @@ import '@xyflow/react/dist/style.css';
 import { addBlock, connect, deleteBlocks, duplicateBlock } from '../actions';
 import { hasAudio, ports, simpleSound, type Block, type BlockType } from '../model/project';
 import type { Issue } from '../model/validate';
+import { t } from '../i18n';
 import { useStore } from '../store';
 import { BLOCKS, END_KINDS, PALETTE_ORDER } from './blocks';
 import { attachMediaToBlock } from './sound';
@@ -19,16 +20,16 @@ function summary(b: Block, d: NodeData): string {
   switch (b.type) {
     case 'scene': case 'choice': return b.text;
     case 'end': return END_KINDS.find((k) => k.kind === b.kind)!.icon + ' ' + b.text;
-    case 'item': return `${{ give: 'Donner', take: 'Retirer', has: 'A-t-il' }[b.op]} : ${d.itemName(b.item)}${b.op === 'has' ? ' ?' : ''}`;
+    case 'item': return b.op === 'has' ? t('A-t-il {item} ?', { item: d.itemName(b.item) }) : `${b.op === 'give' ? t('Donner') : t('Retirer')} : ${d.itemName(b.item)}`;
     case 'var': return `${d.varName(b.var)} ${b.op === 'set' ? '=' : b.value >= 0 ? '+' : '−'} ${b.op === 'set' ? b.value : Math.abs(b.value)}`;
     case 'cond': {
-      const t = b.test;
-      if (!t) return 'À configurer';
-      if (t.kind === 'item') return `A-t-il ${d.itemName(t.item)} ?`;
-      if (t.kind === 'var') return `${d.varName(t.var)} ${t.op} ${t.value} ?`;
-      return 'Déjà passé par… ?';
+      const test = b.test;
+      if (!test) return t('À configurer');
+      if (test.kind === 'item') return t('A-t-il {item} ?', { item: d.itemName(test.item) });
+      if (test.kind === 'var') return `${d.varName(test.var)} ${test.op} ${test.value} ?`;
+      return t('Déjà passé par… ?');
     }
-    case 'loop': return b.reset ? 'Recommencer à zéro' : 'Revenir en arrière';
+    case 'loop': return b.reset ? t('Recommencer à zéro') : t('Revenir en arrière');
     default: return '';
   }
 }
@@ -45,8 +46,8 @@ function BlockNode({ data, selected }: NodeProps<BNode>) {
       <div className="block-head">
         <span className="block-icon">{m.icon}</span>
         <span className="block-kind">{m.label}</span>
-        {audio && <span className="block-badge" title="Ce bloc a un son">🔊</span>}
-        {data.issue && <span className={'block-badge issue-' + data.issue} title="Voir les vérifications">{data.issue === 'error' ? '⛔' : '⚠️'}</span>}
+        {audio && <span className="block-badge" title={t('Ce bloc a un son')}>🔊</span>}
+        {data.issue && <span className={'block-badge issue-' + data.issue} title={t('Voir les vérifications')}>{data.issue === 'error' ? '⛔' : '⚠️'}</span>}
       </div>
       {'image' in b && b.image && imageUrl(b.image) && <img className="block-img" src={imageUrl(b.image)} alt="" />}
       {b.type !== 'start' && <div className="block-title">{title}</div>}
@@ -64,6 +65,21 @@ function BlockNode({ data, selected }: NodeProps<BNode>) {
 }
 
 const nodeTypes = { block: BlockNode };
+
+/** Libellés d'accessibilité et infobulles de React Flow (en anglais par défaut). */
+const ARIA = {
+  'node.a11yDescription.default': t('Appuie sur Entrée ou Espace pour choisir un bloc, sur Suppr pour l’effacer, sur Échap pour annuler.'),
+  'node.a11yDescription.keyboardDisabled': t('Appuie sur Entrée ou Espace pour choisir un bloc, puis déplace-le avec les flèches. Suppr pour l’effacer, Échap pour annuler.'),
+  'node.a11yDescription.ariaLiveMessage': ({ x, y }: { direction: string; x: number; y: number }) => t('Bloc déplacé. Nouvelle position : x {x}, y {y}', { x, y }),
+  'edge.a11yDescription.default': t('Appuie sur Entrée ou Espace pour choisir une flèche, puis sur Suppr pour l’effacer ou sur Échap pour annuler.'),
+  'controls.ariaLabel': t('Commandes'),
+  'controls.zoomIn.ariaLabel': t('Zoomer'),
+  'controls.zoomOut.ariaLabel': t('Dézoomer'),
+  'controls.fitView.ariaLabel': t('Tout voir'),
+  'controls.interactive.ariaLabel': t('Verrouiller'),
+  'minimap.ariaLabel': t('Plan miniature'),
+  'handle.ariaLabel': t('Point de liaison'),
+};
 
 interface Menu { x: number; y: number; flow: { x: number; y: number }; node?: string; from?: { source: string; port: string } }
 
@@ -183,6 +199,7 @@ export function Canvas({ issues }: { issues: Issue[] }) {
         defaultEdgeOptions={{ type: 'smoothstep' }}
         connectionLineStyle={{ strokeWidth: 3 }}
         minZoom={0.2}
+        ariaLabelConfig={ARIA}
         fitView
         fitViewOptions={{ maxZoom: 1, minZoom: 0.5, padding: 0.1 }}
       >
@@ -194,18 +211,18 @@ export function Canvas({ issues }: { issues: Issue[] }) {
         <div className="menu" style={{ left: menu.x, top: menu.y }} onMouseLeave={() => setMenu(null)}>
           {menu.node ? (
             <>
-              <button onClick={() => { useStore.getState().startPlay(menu.node!); setMenu(null); }}>▶ Jouer depuis ici</button>
+              <button onClick={() => { useStore.getState().startPlay(menu.node!); setMenu(null); }}>▶ {t('Jouer depuis ici')}</button>
               {project.blocks.find((b) => b.id === menu.node)?.type !== 'start' && <>
-                <button onClick={() => { duplicateBlock(menu.node!); setMenu(null); }}>📄 Dupliquer</button>
-                <button onClick={() => { deleteBlocks([menu.node!]); setMenu(null); }}>🗑️ Supprimer</button>
+                <button onClick={() => { duplicateBlock(menu.node!); setMenu(null); }}>📄 {t('Dupliquer')}</button>
+                <button onClick={() => { deleteBlocks([menu.node!]); setMenu(null); }}>🗑️ {t('Supprimer')}</button>
               </>}
             </>
           ) : (
             <>
-              <div className="menu-title">{menu.from ? 'Relier à un nouveau bloc :' : 'Ajouter un bloc :'}</div>
-              {types.map((t) => (
-                <button key={t} onClick={() => { addBlock(t, menu.flow.x, menu.flow.y - 30, menu.from); setMenu(null); }}>
-                  <span className="dot" style={{ background: BLOCKS[t].color }} />{BLOCKS[t].icon} {BLOCKS[t].label}
+              <div className="menu-title">{menu.from ? t('Relier à un nouveau bloc :') : t('Ajouter un bloc :')}</div>
+              {types.map((ty) => (
+                <button key={ty} onClick={() => { addBlock(ty, menu.flow.x, menu.flow.y - 30, menu.from); setMenu(null); }}>
+                  <span className="dot" style={{ background: BLOCKS[ty].color }} />{BLOCKS[ty].icon} {BLOCKS[ty].label}
                 </button>
               ))}
             </>

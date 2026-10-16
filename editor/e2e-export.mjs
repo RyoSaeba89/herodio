@@ -6,6 +6,8 @@ const browser = await chromium.launch({ channel: 'msedge' });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, acceptDownloads: true });
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
+// Langue de l'interface (HERODIO_LANG=en pour l'anglais), sans passer par l'écran du premier démarrage.
+await page.addInitScript((l) => localStorage.setItem('herodio-lang', l), process.env.HERODIO_LANG ?? 'fr');
 await page.goto('http://localhost:1420');
 await page.evaluate(() => indexedDB.deleteDatabase('keyval-store'));
 await page.reload();

@@ -4,7 +4,8 @@ import { decode, putBlob } from '../audio/media';
 import {
   newBlock, newProject, uid, type Block, type ChoiceBlock, type Clip, type Media, type MediaCategory, type Project, type Sound, type Track,
 } from '../model/project';
-import { VOICE_CREDIT } from '../audio/tts';
+import { VOICES } from '../audio/tts';
+import type { Lang } from '../i18n';
 import { imagesOf, narrationTexts, soundsOf, textHash, type Def, type Media as NodeMedia, type StoryDef } from './dsl';
 
 /** Média déjà enregistré : identifiant et durée (0 pour une image). */
@@ -16,24 +17,41 @@ const clip = (media: string, start: number, duration: number, extra: Partial<Cli
 const track = (name: string, role: Track['role'], volume: number, clips: Clip[]): Track =>
   ({ id: uid(), name, role, volume, muted: false, solo: false, clips });
 
+/** Noms anglais des sons communs (bibliothèque et pistes du studio) ; en français, le nom du fichier suffit. */
+const SOUND_EN: Record<string, string> = {
+  applaudissements: 'applause', berceuse: 'lullaby', bond: 'jump', briques: 'bricks', campagne: 'countryside', cloche: 'bell',
+  course: 'running', craquement: 'creak', croque: 'crunch', feu: 'fire', flute: 'flute', foret: 'forest', hibou: 'owl',
+  'loup-hurle': 'wolf howl', magie: 'magic', marmite: 'cooking pot', mouton: 'sheep', 'musique-douce': 'gentle music',
+  'musique-joyeuse': 'happy music', 'musique-secrete': 'secret music', nuit: 'night', oiseaux: 'birds', 'pas-feuilles': 'steps on leaves',
+  'pas-lourds': 'heavy steps', 'plouf-petit': 'small splash', plouf: 'splash', rate: 'failure', ronflement: 'snoring',
+  'souffle-loup': 'wolf blowing', 'toc-toc': 'knock knock', volets: 'shutters',
+};
+export const soundName = (name: string, lang: Lang = 'fr') => (lang === 'en' ? SOUND_EN[name] ?? name : name);
+
+/** Textes ajoutés par Herodio dans la langue de l'histoire. */
+const WORDS: Record<Lang, { source: (s: string) => string; art: string; cover: string; voice: string; narration: string }> = {
+  fr: { source: (s) => `D’après ${s} (domaine public), adaptation Herodio`, art: 'Illustrations, bruitages et musiques : Herodio (CC0)', cover: 'Couverture', voice: 'Voix', narration: 'Narration' },
+  en: { source: (s) => `Based on ${s} (public domain), adapted by Herodio`, art: 'Illustrations, sound effects and music: Herodio (CC0)', cover: 'Cover', voice: 'Voice', narration: 'Narration' },
+};
+
 /** Mixage d'un moment : narration, bruitages calés sur la voix, ambiance de fond avec fondus. */
-function mix(text: string, m: NodeMedia, assets: Assets): Sound | null {
+function mix(text: string, m: NodeMedia, assets: Assets, lang: Lang): Sound | null {
   const voice = assets('voix', textHash(text));
   const vStart = m.voiceAt ?? (m.fx?.some(([, s = 0]) => s === 0) ? 0.8 : 0.3);
   const vEnd = voice ? vStart + voice.duration : vStart;
   const tracks: Track[] = [];
-  if (voice) tracks.push(track('Voix', 'voix', 1, [clip(voice.id, vStart, voice.duration)]));
+  if (voice) tracks.push(track(WORDS[lang].voice, 'voix', 1, [clip(voice.id, vStart, voice.duration)]));
   for (const [name, at = 0, vol = 1] of m.fx ?? []) {
     const fx = assets('son', name);
     if (!fx) continue;
     const start = at >= 0 ? at : Math.max(0, vEnd + at + 1);
-    tracks.push(track(name, 'bruitage', vol, [clip(fx.id, start, fx.duration)]));
+    tracks.push(track(soundName(name, lang), 'bruitage', vol, [clip(fx.id, start, fx.duration)]));
   }
   if (m.amb) {
     const amb = assets('son', m.amb[0]);
     if (amb) {
       const len = Math.min(amb.duration, Math.max(vEnd + 1.5, 4));
-      tracks.push(track(m.amb[0], 'ambiance', m.amb[1] ?? 0.4, [clip(amb.id, 0, len, { fadeIn: 1, fadeOut: 1.5 })]));
+      tracks.push(track(soundName(m.amb[0], lang), 'ambiance', m.amb[1] ?? 0.4, [clip(amb.id, 0, len, { fadeIn: 1, fadeOut: 1.5 })]));
     }
   }
   if (!tracks.length) return null;
@@ -42,15 +60,17 @@ function mix(text: string, m: NodeMedia, assets: Assets): Sound | null {
 
 /** Construction pure (testable sans navigateur) à partir de médias déjà disponibles. */
 export function projectFromDef(def: StoryDef, assets: Assets): Project {
+  const lang = def.lang ?? 'fr';
+  const w = WORDS[lang];
   const p = newProject(def.title);
-  Object.assign(p, { id: 'histoire-' + def.id, description: def.description, author: 'Herodio', level: def.level ?? 'avance', color: def.color });
+  Object.assign(p, { id: 'histoire-' + def.id + (lang === 'fr' ? '' : '-' + lang), lang, description: def.description, author: 'Herodio', level: def.level ?? 'avance', color: def.color });
   p.items = def.items ?? [];
   p.variables = def.variables ?? [];
   p.cover = assets('image', 'couverture')?.id ?? null;
   p.credits = [
-    ...(def.source ? [`D’après ${def.source} (domaine public), adaptation Herodio`] : []),
-    VOICE_CREDIT,
-    'Illustrations, bruitages et musiques : Herodio (CC0)',
+    ...(def.source ? [w.source(def.source)] : []),
+    VOICES[lang].credit,
+    w.art,
   ];
   const bid = (key: string) => `${def.id}-${key}`;
   const start = p.blocks[0];
@@ -61,16 +81,16 @@ export function projectFromDef(def: StoryDef, assets: Assets): Project {
     const img = 'img' in d && d.img ? assets('image', d.img)?.id ?? null : null;
     switch (d.k) {
       case 'scene':
-        b = { ...newBlock('scene'), title: d.title, text: d.text, image: img, sound: mix(d.text, d, assets), next: bid(d.next) } as Block;
+        b = { ...newBlock('scene'), title: d.title, text: d.text, image: img, sound: mix(d.text, d, assets, lang), next: bid(d.next) } as Block;
         break;
       case 'choice':
         b = {
-          ...newBlock('choice'), title: d.title, text: d.text, image: img, sound: mix(d.text, d, assets),
-          options: d.options.map(([text, to]) => ({ id: uid(), text, sound: mix(text, {}, assets), next: bid(to) })),
+          ...newBlock('choice'), title: d.title, text: d.text, image: img, sound: mix(d.text, d, assets, lang),
+          options: d.options.map(([text, to]) => ({ id: uid(), text, sound: mix(text, {}, assets, lang), next: bid(to) })),
         } as ChoiceBlock;
         break;
       case 'end':
-        b = { ...newBlock('end'), kind: d.kind, title: d.title, text: d.text, image: img, sound: mix(d.text, d, assets) } as Block;
+        b = { ...newBlock('end'), kind: d.kind, title: d.title, text: d.text, image: img, sound: mix(d.text, d, assets, lang) } as Block;
         break;
       case 'give': case 'take':
         b = { ...newBlock('item'), op: d.k, item: d.item, next: bid(d.next) } as Block;
@@ -119,11 +139,18 @@ export async function buildStory(def: StoryDef): Promise<Project> {
     ...imagesOf(def).map((i) => load('image', i, `${base}img/${i}.svg`, 'image', 'svg', 'image/svg+xml')),
   ]);
   const p = projectFromDef(def, (kind, name) => found.get(`${kind}:${name}`) ?? null);
-  // Narration : noms lisibles dans la bibliothèque
+  // Noms lisibles dans la bibliothèque : titre du moment raconté ou illustré, nom du bruitage dans la langue de l'histoire
+  const w = WORDS[def.lang ?? 'fr'];
   for (const [key, d] of Object.entries(def.nodes)) {
     if (!('text' in d)) continue;
-    const m = media.find((x) => x.id === `${def.id}-voix-${textHash(d.text)}`);
-    if (m) m.name = `Narration – ${d.title ?? key}`;
+    const voice = media.find((x) => x.id === `${def.id}-voix-${textHash(d.text)}`);
+    if (voice) voice.name = `${w.narration} – ${d.title ?? key}`;
+    const img = media.find((x) => 'img' in d && x.id === `${def.id}-image-${d.img}` && x.name === d.img);
+    if (img) img.name = d.title;
+  }
+  for (const m of media) {
+    if (m.id === `${def.id}-image-couverture`) m.name = w.cover;
+    else if (m.category !== 'voix' && m.category !== 'image') m.name = soundName(m.name, def.lang);
   }
   p.media = media;
   return p;

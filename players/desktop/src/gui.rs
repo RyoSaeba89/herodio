@@ -3,6 +3,7 @@
 
 use crate::audio::Audio;
 use crate::engine::Status;
+use crate::i18n::{self, fill, tr};
 use crate::pack::{self, Pack};
 use crate::session::{end_label, Session};
 use eframe::egui::{
@@ -140,10 +141,12 @@ pub struct App {
     node_token: String,
     node_since: Instant,
     started: Instant,
+    /// Premier démarrage : on demande la langue avant tout (0 = français, 1 = anglais surligné).
+    ask_lang: Option<usize>,
 }
 
 impl App {
-    pub fn new(cc: &eframe::CreationContext, open: Option<PathBuf>, fullscreen: bool) -> App {
+    pub fn new(cc: &eframe::CreationContext, open: Option<PathBuf>, fullscreen: bool, lang_chosen: bool) -> App {
         let ctx = &cc.egui_ctx;
         ctx.set_theme(egui::Theme::Light);
         ctx.all_styles_mut(|s| {
@@ -158,12 +161,13 @@ impl App {
         let mut app = App {
             library: pack::scan(&lib_dir), lib_dir, lib_sel: 0, session: None, audio: Audio::new(), message: String::new(), fullscreen,
             textures: HashMap::new(), node_token: String::new(), node_since: Instant::now(), started: Instant::now(),
+            ask_lang: (!lang_chosen).then_some(0),
         };
-        if !app.audio.available() { app.message = "Aucune sortie audio trouvée : les histoires seront muettes.".into(); }
+        if !app.audio.available() { app.message = tr("Aucune sortie audio trouvée : les histoires seront muettes.").into(); }
         if let Some(p) = open {
             match Pack::open(&p) {
                 Ok(pk) => app.session = Some(Session::new(pk, &mut app.audio)),
-                Err(e) => app.message = format!("Impossible d'ouvrir {} : {e}", p.display()),
+                Err(e) => app.message = fill(tr("Impossible d'ouvrir {} : {}"), &[&p.display().to_string(), &e]),
             }
         }
         app
@@ -192,8 +196,8 @@ impl App {
         if dropped.is_empty() { return; }
         for p in dropped {
             self.message = match pack::import(&p, &self.lib_dir) {
-                Ok(_) => format!("Histoire ajoutée : {}", p.file_name().unwrap_or_default().to_string_lossy()),
-                Err(e) => format!("{} n'a pas pu être ajoutée : {e}", p.display()),
+                Ok(_) => fill(tr("Histoire ajoutée : {}"), &[&p.file_name().unwrap_or_default().to_string_lossy()]),
+                Err(e) => fill(tr("{} n'a pas pu être ajoutée : {}"), &[&p.display().to_string(), &e]),
             };
         }
         self.refresh();
@@ -204,6 +208,46 @@ impl App {
             Ok(pk) => { self.session = Some(Session::new(pk, &mut self.audio)); self.message.clear(); }
             Err(e) => self.message = e,
         }
+    }
+
+    fn set_lang(&mut self, ctx: &egui::Context, english: bool) {
+        i18n::choose(&self.lib_dir, english);
+        self.ask_lang = None;
+        if !self.audio.available() { self.message = tr("Aucune sortie audio trouvée : les histoires seront muettes.").into(); }
+        ctx.send_viewport_cmd(ViewportCommand::Title(tr("Herodio — Lecteur d'histoires").into()));
+    }
+
+    // ------------------------------------------------------------ langue (premier démarrage)
+
+    fn language_ui(&mut self, ui: &mut egui::Ui) {
+        let ctx = ui.ctx().clone();
+        paint_background(ui, DEFAULT_COLOR, self.started.elapsed().as_secs_f64());
+        let mut sel = self.ask_lang.unwrap_or(0);
+        let (toggle, enter, one, two) = ctx.input(|i| (
+            [Key::ArrowLeft, Key::ArrowRight, Key::ArrowUp, Key::ArrowDown].iter().any(|k| i.key_pressed(*k)),
+            i.key_pressed(Key::Enter) || i.key_pressed(Key::Space),
+            i.key_pressed(Key::Num1), i.key_pressed(Key::Num2),
+        ));
+        if toggle { sel = 1 - sel; }
+        let mut pick = if one { Some(0) } else if two { Some(1) } else { enter.then_some(sel) };
+        ui.vertical_centered(|ui| {
+            ui.add_space((ui.available_height() / 2.0 - 170.0).max(10.0));
+            ui.label(RichText::new("🎧").size(80.0));
+            ui.label(RichText::new("Herodio").size(48.0).strong().color(INK));
+            ui.label(RichText::new("Choisis ta langue · Choose your language").size(26.0).color(MUTED));
+            ui.add_space(24.0);
+            ui.horizontal(|ui| {
+                ui.add_space((ui.available_width() - 2.0 * 240.0 - 24.0).max(0.0) / 2.0);
+                ui.spacing_mut().item_spacing.x = 24.0;
+                for (i, name) in ["1  Français", "2  English"].into_iter().enumerate() {
+                    let (fill_c, fg) = if i == sel { (DEFAULT_COLOR, Color32::WHITE) } else { (Color32::WHITE, INK) };
+                    if pill(ui, name, fill_c, fg) { pick = Some(i); }
+                }
+            });
+        });
+        self.ask_lang = Some(sel);
+        if let Some(i) = pick { self.set_lang(&ctx, i == 1); }
+        ctx.request_repaint_after(Duration::from_millis(50));
     }
 
     // ------------------------------------------------------------ bibliothèque
@@ -229,20 +273,23 @@ impl App {
         ui.add_space(6.0);
         ui.horizontal(|ui| {
             ui.label(RichText::new("🎧").size(44.0));
-            ui.label(RichText::new("Mes histoires").size(44.0).strong().color(INK));
+            ui.label(RichText::new(tr("Mes histoires")).size(44.0).strong().color(INK));
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                if ui.add(egui::Button::new("⟳ Actualiser").corner_radius(CornerRadius::same(14))).clicked() { self.refresh(); }
+                if ui.add(egui::Button::new(tr("⟳ Actualiser")).corner_radius(CornerRadius::same(14))).clicked() { self.refresh(); }
+                // Changer de langue : le bouton porte le nom de l'autre langue.
+                let other = if i18n::english() { "Français" } else { "English" };
+                if ui.add(egui::Button::new(format!("🌐 {other}")).corner_radius(CornerRadius::same(14))).clicked() { self.set_lang(&ctx, !i18n::english()); }
             });
         });
-        ui.label(RichText::new(format!("Glisse un fichier .aistory dans cette fenêtre pour l'ajouter · dossier : {}", self.lib_dir.display())).small().color(MUTED));
+        ui.label(RichText::new(fill(tr("Glisse un fichier .aistory dans cette fenêtre pour l'ajouter · dossier : {}"), &[&self.lib_dir.display().to_string()])).small().color(MUTED));
         if !self.message.is_empty() { ui.label(RichText::new(&self.message).color(CHOICE_COLORS[0]).strong()); }
         ui.add_space(8.0);
         if n == 0 {
             ui.add_space(60.0);
             ui.vertical_centered(|ui| {
                 ui.label(RichText::new("📚").size(80.0));
-                ui.label(RichText::new("Aucune histoire pour l'instant.").size(28.0).strong());
-                ui.label("Dans Herodio Studio : « Exporter mon histoire » → Windows ou Raspberry Pi.");
+                ui.label(RichText::new(tr("Aucune histoire pour l'instant.")).size(28.0).strong());
+                ui.label(tr("Dans Herodio Studio : « Exporter mon histoire » → Windows ou Raspberry Pi."));
             });
             return;
         }
@@ -275,7 +322,7 @@ impl App {
             self.texture(&ctx, &pk, &c)
         });
         let sel = i == self.lib_sel;
-        let sub = if desc.is_empty() { format!("par {author}") } else { desc };
+        let sub = if desc.is_empty() { fill(tr("par {}"), &[&author]) } else { desc };
         let g_title = ui.painter().layout(title, FontId::proportional(25.0), INK, w - 32.0);
         let g_sub = ui.painter().layout(sub, FontId::proportional(16.0), MUTED, w - 32.0);
         let h = w * 0.75 + 42.0 + g_title.size().y + g_sub.size().y;
@@ -344,7 +391,7 @@ impl App {
 
         // Barre du haut : retour, titre, sac
         ui.horizontal(|ui| {
-            if ui.add(egui::Button::new(RichText::new("◀  Mes histoires").size(20.0)).fill(Color32::from_white_alpha(220)).corner_radius(CornerRadius::same(20))).clicked() {
+            if ui.add(egui::Button::new(RichText::new(tr("◀  Mes histoires")).size(20.0)).fill(Color32::from_white_alpha(220)).corner_radius(CornerRadius::same(20))).clicked() {
                 back = true;
             }
             ui.label(RichText::new(&s.pack.story.title).size(22.0).strong().color(mix(color, INK, 0.4)));
@@ -417,11 +464,11 @@ impl App {
                     ui.add_space(6.0);
                 }
             } else if playing {
-                if pill(ui, "Suivant  ▶", color, Color32::WHITE) { act = Some(Box::new(|s, a| s.next(a))); }
+                if pill(ui, tr("Suivant  ▶"), color, Color32::WHITE) { act = Some(Box::new(|s, a| s.next(a))); }
             } else {
                 ui.horizontal(|ui| {
-                    if pill(ui, "⟲  Rejouer", color, Color32::WHITE) { act = Some(Box::new(|s, a| s.restart(a))); }
-                    if pill(ui, "Mes histoires", Color32::WHITE, INK) { back = true; }
+                    if pill(ui, tr("⟲  Rejouer"), color, Color32::WHITE) { act = Some(Box::new(|s, a| s.restart(a))); }
+                    if pill(ui, tr("Mes histoires"), Color32::WHITE, INK) { back = true; }
                 });
             }
         };
@@ -452,7 +499,7 @@ impl App {
                 content(ui);
             }
             ui.add_space(14.0);
-            ui.label(RichText::new("Flèches : choisir · Entrée : valider · 1-9 : réponse directe · R : recommencer · Échap : retour · F11 : plein écran").small().color(MUTED));
+            ui.label(RichText::new(tr("Flèches : choisir · Entrée : valider · 1-9 : réponse directe · R : recommencer · Échap : retour · F11 : plein écran")).small().color(MUTED));
         });
 
         if let Some(k) = &end {
@@ -477,18 +524,18 @@ impl eframe::App for App {
             ctx.send_viewport_cmd(ViewportCommand::Fullscreen(self.fullscreen));
         }
         egui::CentralPanel::default_margins().frame(egui::Frame::new().inner_margin(28.0)).show(ui, |ui| {
-            if self.session.is_some() { self.player_ui(ui) } else { self.library_ui(ui) }
+            if self.ask_lang.is_some() { self.language_ui(ui) } else if self.session.is_some() { self.player_ui(ui) } else { self.library_ui(ui) }
         });
         if self.session.is_none() { ctx.request_repaint_after(Duration::from_millis(50)); }
     }
 }
 
-pub fn run(open: Option<PathBuf>, fullscreen: bool) -> eframe::Result {
+pub fn run(open: Option<PathBuf>, fullscreen: bool, lang_chosen: bool) -> eframe::Result {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_title("Herodio — Lecteur d'histoires")
+            .with_title(tr("Herodio — Lecteur d'histoires"))
             .with_icon(eframe::icon_data::from_png_bytes(include_bytes!("../icon.png")).expect("icône")).with_inner_size([1280.0, 820.0]).with_fullscreen(fullscreen).with_drag_and_drop(true),
         ..Default::default()
     };
-    eframe::run_native("Herodio", options, Box::new(move |cc| Ok(Box::new(App::new(cc, open, fullscreen)))))
+    eframe::run_native("Herodio", options, Box::new(move |cc| Ok(Box::new(App::new(cc, open, fullscreen, lang_chosen)))))
 }

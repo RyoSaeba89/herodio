@@ -4,7 +4,9 @@
 #include <SD.h>
 #include <SPI.h>
 #include <M5Cardputer.h>
+#include <Preferences.h>
 #include "engine.h"
+#include "i18n.h"
 
 using namespace herodio;
 
@@ -91,6 +93,9 @@ static int sel = 0;
 static bool scenePlaying = false, showInventory = false, showText = false, dirty = true, sdOk = false;
 static std::string message;
 static uint8_t volume = 160;
+/// Choix de la langue : au premier démarrage (rien d'enregistré) ou touche « l » dans la bibliothèque. 0 = français, 1 = anglais.
+static int langSel = -1;
+static Preferences prefs;
 
 // ------------------------------------------------------------------ dessin
 
@@ -163,7 +168,7 @@ static void drawLibrary() {
         if (!drawImage(e.dir, e.cover)) canvas.fillScreen(c);
         // Le recadrage 4:3 → écran large coupe le liseré de la couverture : on le redessine en entier.
         for (int i = 0; i < 6; i++) canvas.drawRoundRect(i, i, 240 - 2 * i, 135 - 2 * i, 11 - i, c);
-        std::string pos = "< " + std::to_string(libSel + 1) + "/" + std::to_string(library.size()) + " >   OK : écouter";
+        std::string pos = "< " + std::to_string(libSel + 1) + "/" + std::to_string(library.size()) + " >   " + tr("OK : écouter");
         band(c, e.title, pos.c_str());
         if (!message.empty()) { canvas.fillRect(0, 0, 240, 16, C_ORANGE); canvas.setTextColor(C_WHITE); canvas.setFont(&fonts::efontJA_12); canvas.drawString(message.c_str(), 4, 1); }
         return;
@@ -171,14 +176,14 @@ static void drawLibrary() {
     canvas.fillRect(0, 0, 240, 18, C_ACCENT);
     canvas.setFont(&fonts::efontJA_14_b);
     canvas.setTextColor(C_WHITE);
-    canvas.drawString("Herodio - Mes histoires", 4, 2);
+    canvas.drawString(tr("Herodio - Mes histoires"), 4, 2);
     canvas.setFont(&fonts::efontJA_12);
     if (!sdOk) {
         canvas.setTextColor(C_INK);
-        drawWrapped("Insère la carte microSD contenant le dossier « herodio ».", 6, 30, 228, 120, 14);
+        drawWrapped(tr("Insère la carte microSD contenant le dossier « herodio »."), 6, 30, 228, 120, 14);
     } else if (library.empty()) {
         canvas.setTextColor(C_INK);
-        drawWrapped("Aucune histoire. Exporte une histoire pour « Cardputer ADV » et décompresse-la à la racine de la carte.", 6, 26, 228, 120, 14);
+        drawWrapped(tr("Aucune histoire. Exporte une histoire pour « Cardputer ADV » et décompresse-la à la racine de la carte."), 6, 26, 228, 120, 14);
     }
     int first = std::max(0, libSel - 3);
     for (int i = first; i < (int)library.size() && i < first + 6; i++) {
@@ -188,14 +193,14 @@ static void drawLibrary() {
         canvas.drawString(library[i].title.c_str(), 8, y);
     }
     if (!message.empty()) { canvas.setTextColor(C_ORANGE); canvas.drawString(message.c_str(), 4, 110); }
-    hint(";/. choisir   OK écouter   -/= volume");
+    hint(tr(";/. choisir  OK écouter  -/= volume  l langue"));
 }
 
 const char* endLabel(const std::string& k) {
-    if (k == "happy") return "Fin heureuse";
-    if (k == "sad") return "Fin triste";
-    if (k == "secret") return "Fin secrète !";
-    return "Fin";
+    if (k == "happy") return tr("Fin heureuse");
+    if (k == "sad") return tr("Fin triste");
+    if (k == "secret") return tr("Fin secrète !");
+    return tr("Fin");
 }
 
 static void drawPlay() {
@@ -205,7 +210,7 @@ static void drawPlay() {
     bool picture = cur && !showText && !showInventory && (cur->type == "scene" || cur->type == "end") && drawImage(storyDir, cur->image);
     if (picture) {
         std::string t = cur->title + (audio.active ? "  ♪" : "");
-        band(color, t, engine->status != PLAYING ? "OK : rejouer   t : texte   Del : menu" : "OK : suivant   t : texte   Del : menu");
+        band(color, t, engine->status != PLAYING ? tr("OK : rejouer   t : texte   Del : menu") : tr("OK : suivant   t : texte   Del : menu"));
         if (engine->status != PLAYING) {
             canvas.fillRoundRect(4, 4, 120, 18, 6, cur->kind == "secret" ? C_VIOLET : C_ORANGE);
             canvas.setFont(&fonts::efontJA_12);
@@ -219,7 +224,7 @@ static void drawPlay() {
     canvas.setTextColor(C_WHITE);
     canvas.drawString(story.title.c_str(), 4, 1);
     if (!engine->items.empty()) {
-        std::string s = "Sac: " + std::to_string(engine->items.size()) + " (i)";
+        std::string s = tr("Sac: ") + std::to_string(engine->items.size()) + " (i)";
         canvas.setTextColor(C_WHITE);
         canvas.drawRightString(s.c_str(), 236, 1);
     }
@@ -228,17 +233,17 @@ static void drawPlay() {
     if (engine->status != PLAYING) {
         canvas.setFont(&fonts::efontJA_12);
         canvas.setTextColor(C_ORANGE);
-        canvas.drawString(engine->status == ERROR ? "Oups !" : endLabel(n ? n->kind : ""), 4, y);
+        canvas.drawString(engine->status == ERROR ? tr("Oups !") : endLabel(n ? n->kind : ""), 4, y);
         y += 14;
     }
     canvas.setFont(&fonts::efontJA_14_b);
     canvas.setTextColor(C_INK);
-    std::string title = engine->status == ERROR ? "Boucle sans fin" : n ? n->title : "Fin";
+    std::string title = engine->status == ERROR ? tr("Boucle sans fin") : n ? n->title : tr("Fin");
     if (audio.active) title += "  ♪";
     canvas.drawString(title.c_str(), 4, y);
     y += 17;
     canvas.setFont(&fonts::efontJA_12);
-    std::string text = engine->status == ERROR ? "Cette histoire tourne en rond. Demande à son auteur de la vérifier." : n ? n->text : "L'histoire s'arrête ici.";
+    std::string text = engine->status == ERROR ? tr("Cette histoire tourne en rond. Demande à son auteur de la vérifier.") : n ? n->text : tr("L'histoire s'arrête ici.");
     size_t nopt = n && engine->status == PLAYING && n->type == "choice" ? n->options.size() : 0;
     int optTop = 122 - (int)std::min<size_t>(nopt, 5) * 15;
     y = drawWrapped(text, 4, y, 232, nopt ? optTop : 122, 13);
@@ -247,25 +252,55 @@ static void drawPlay() {
         int oy = optTop + (i - first) * 15;
         if (i == sel) canvas.fillRoundRect(2, oy - 1, 236, 15, 4, C_ORANGE);
         canvas.setTextColor(i == sel ? C_WHITE : C_INK);
-        canvas.drawString((std::to_string(i + 1) + " " + n->options[i].text).c_str(), 6, oy);
+        const std::string& label = n->options[i].text.empty() ? tr("Choix ") + std::to_string(i + 1) : n->options[i].text;
+        canvas.drawString((std::to_string(i + 1) + " " + label).c_str(), 6, oy);
     }
     if (showInventory) {
         canvas.fillRoundRect(20, 20, 200, 95, 8, C_WHITE);
         canvas.drawRoundRect(20, 20, 200, 95, 8, C_VIOLET);
         canvas.setTextColor(C_VIOLET);
-        canvas.drawString("Mon sac", 30, 26);
+        canvas.drawString(tr("Mon sac"), 30, 26);
         canvas.setTextColor(C_INK);
         int iy = 42;
-        if (engine->items.empty()) canvas.drawString("(vide)", 30, iy);
+        if (engine->items.empty()) canvas.drawString(tr("(vide)"), 30, iy);
         for (auto& it : engine->items) { if (iy > 100) break; canvas.drawString(story.itemName(it).c_str(), 30, iy); iy += 14; }
     }
-    if (engine->status != PLAYING) hint("OK rejouer   Del menu");
-    else if (nopt) hint(";/. choisir  OK valider  Del menu");
-    else hint("OK suivant   t image   Del menu");
+    if (engine->status != PLAYING) hint(tr("OK rejouer   Del menu"));
+    else if (nopt) hint(tr(";/. choisir  OK valider  Del menu"));
+    else hint(tr("OK suivant   t image   Del menu"));
+}
+
+/// Choix de la langue, en français et en anglais à la fois.
+static void drawLanguage() {
+    canvas.fillScreen(C_BG);
+    canvas.fillRect(0, 0, 240, 18, C_ACCENT);
+    canvas.setFont(&fonts::efontJA_14_b);
+    canvas.setTextColor(C_WHITE);
+    canvas.drawString("Herodio", 4, 2);
+    canvas.setFont(&fonts::efontJA_12);
+    canvas.setTextColor(C_INK);
+    canvas.drawString("Choisis ta langue", 8, 26);
+    canvas.drawString("Choose your language", 8, 40);
+    const char* names[] = {"1  Français", "2  English"};
+    for (int i = 0; i < 2; i++) {
+        int y = 64 + i * 20;
+        if (i == langSel) canvas.fillRoundRect(4, y - 2, 232, 18, 5, C_ORANGE);
+        canvas.setTextColor(i == langSel ? C_WHITE : C_INK);
+        canvas.drawString(names[i], 12, y);
+    }
+    hint(";/.  OK");
+}
+
+static void setLanguage(bool english) {
+    englishFlag() = english;
+    prefs.putString("lang", english ? "en" : "fr");
+    langSel = -1;
+    message.clear();
+    dirty = true;
 }
 
 static void render() {
-    if (engine) drawPlay(); else drawLibrary();
+    if (langSel >= 0) drawLanguage(); else if (engine) drawPlay(); else drawLibrary();
     canvas.pushSprite(0, 0);
     dirty = false;
 }
@@ -314,12 +349,18 @@ static void playOption() {
 static void openStory(const Entry& e) {
     message.clear();
     File f = SD.open((e.dir + "/story.json").c_str());
-    if (!f || f.size() > MAX_STORY_JSON) { message = "Histoire illisible ou trop grande"; dirty = true; return; }
+    if (!f || f.size() > MAX_STORY_JSON) { message = tr("Histoire illisible ou trop grande"); dirty = true; return; }
     std::string json(f.size(), '\0');
     f.read((uint8_t*)&json[0], json.size());
     f.close();
     std::string err = parse(json.data(), json.size(), story);
-    if (!err.empty()) { message = err; dirty = true; return; }
+    if (!err.empty()) {
+        // parse() répond en français : « story.json illisible : <détail> » ou un message fixe.
+        static const std::string bad = "story.json illisible : ";
+        message = err.compare(0, bad.size(), bad) == 0 ? tr(bad.c_str()) + err.substr(bad.size()) : std::string(tr(err.c_str()));
+        dirty = true;
+        return;
+    }
     storyDir = e.dir;
     delete engine;
     engine = new Engine(story);
@@ -345,7 +386,10 @@ static void confirm() {
 }
 
 static void move(int d) {
-    if (engine) {
+    if (langSel >= 0) {
+        langSel = 1 - langSel;
+        dirty = true;
+    } else if (engine) {
         const Node* n = engine->node;
         if (engine->status != PLAYING || n->type != "choice" || n->options.empty()) return;
         int k = n->options.size();
@@ -367,6 +411,10 @@ void setup() {
     M5Cardputer.Speaker.setVolume(volume);
     canvas.createSprite(240, 135);
     C_BG = canvas.color565(244, 241, 234); C_INK = canvas.color565(38, 35, 58); C_MUTED = canvas.color565(110, 106, 133);
+    prefs.begin("herodio");
+    String lang = prefs.getString("lang", "");
+    englishFlag() = lang == "en";
+    if (lang.isEmpty()) langSel = 0;
     C_ACCENT = canvas.color565(91, 91, 214); C_ORANGE = canvas.color565(242, 138, 28); C_WHITE = TFT_WHITE; C_VIOLET = canvas.color565(139, 92, 246);
     SPI.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS);
     sdOk = SD.begin(SD_CS, SPI, 25000000);
@@ -388,14 +436,15 @@ void loop() {
         if (millis() - last > 2000) { last = millis(); sdOk = SD.begin(SD_CS, SPI, 25000000); if (sdOk) { scanLibrary(); dirty = true; } }
     }
 
-    if (M5Cardputer.BtnA.wasPressed()) { if (engine) confirm(); else if (!library.empty()) openStory(library[libSel]); }
+    if (M5Cardputer.BtnA.wasPressed()) { if (langSel >= 0) setLanguage(langSel == 1); else if (engine) confirm(); else if (!library.empty()) openStory(library[libSel]); }
 
     if (M5Cardputer.Keyboard.isChange() && M5Cardputer.Keyboard.isPressed()) {
         auto ks = M5Cardputer.Keyboard.keysState();
-        if (ks.enter) { if (engine) confirm(); else if (!library.empty()) openStory(library[libSel]); }
+        if (ks.enter) { if (langSel >= 0) setLanguage(langSel == 1); else if (engine) confirm(); else if (!library.empty()) openStory(library[libSel]); }
         else if (ks.del) { if (engine) closeStory(); }
         for (char c : ks.word) {
-            if (c == ';' || c == ',') move(-1);
+            if (langSel >= 0 && (c == '1' || c == '2')) setLanguage(c == '2');
+            else if (c == ';' || c == ',') move(-1);
             else if (c == '.' || c == '/') move(1);
             else if (c == '-' || c == '=') {
                 volume = c == '-' ? (volume > 32 ? volume - 32 : 0) : (volume < 223 ? volume + 32 : 255);
@@ -406,6 +455,7 @@ void loop() {
             } else if (engine && c == 'r') { engine->start(); enter(); }
             else if (engine && c == 'i') { showInventory = !showInventory; dirty = true; }
             else if (engine && c == 't') { showText = !showText; dirty = true; }
+            else if (!engine && langSel < 0 && c == 'l') { langSel = englishFlag() ? 1 : 0; dirty = true; }
         }
     }
 

@@ -1,12 +1,14 @@
 # Formats de fichiers
 
+*[English version](format.en.md)*
+
 Herodio sépare clairement trois choses :
 
 | | Fichier | Contenu | Qui le lit |
 |---|---|---|---|
 | Projet éditable | `mon-histoire.herodio` | `project.json` + sons d'origine (`media/`) | l'éditeur |
 | Pack de lecture | `mon-histoire.aistory` | `story.json` + `metadata.json` + sons prémixés (`assets/audio/`) | les lecteurs |
-| Carte SD Cardputer | `…-carte-sd.zip` | le même pack, déjà décompressé dans `herodio/<histoire>/` | le Cardputer |
+| Carte SD Cardputer | `…-carte-sd.zip` (`…-sd-card.zip` en anglais) | le même pack, déjà décompressé dans `herodio/<histoire>/` | le Cardputer |
 
 Les deux fichiers sont des archives ZIP ordinaires : on peut les ouvrir avec n'importe quel outil d'archive.
 
@@ -20,6 +22,7 @@ media/<id>.<ext>    sons et images d'origine (webm/opus, wav, mp3, ogg… ; png,
 `project.json` conserve **toutes** les informations d'édition :
 
 - la position des blocs ;
+- la langue de l'histoire (`lang` : `fr` ou `en`), qui choisit la voix automatique ; absente dans les fichiers d'avant la 0.2.1, qui sont en français ;
 - le niveau d'interface (`decouverte` ou `avance`) ;
 - les objets (avec leur icône) et les compteurs ;
 - la bibliothèque de sons (nom, catégorie, durée, prise associée à un bloc) ;
@@ -69,6 +72,7 @@ assets/images/001.jpg   illustrations et couverture : JPEG de base (non progress
 - Les identifiants de blocs de `story.json` sont ceux de l'éditeur. Les traces de jeu se comparent donc d'une plateforme à l'autre.
 - Deux emplacements qui ont exactement le même mixage partagent le même fichier.
 - Les lecteurs refusent tout chemin qui sortirait du pack (`..`, chemin absolu) : un pack est une donnée venant d'ailleurs.
+- Les textes de l'histoire sont dans sa propre langue ; les lecteurs ne traduisent que leur propre interface (boutons, fins, messages).
 
 ### Pourquoi du WAV prémixé ?
 

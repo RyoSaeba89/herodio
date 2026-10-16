@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.herodio.core.I18n;
 import org.herodio.core.Library;
 import org.herodio.core.Session;
 
@@ -32,6 +33,8 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import static org.herodio.core.I18n.tr;
+
 /**
  * Lecteur Herodio pour Android — un seul APK de Android 2.3 (API 9) à Android 14.
  * Interface construite en code (aucune bibliothèque), utilisable au doigt, au D-pad, au clavier ou à la manette.
@@ -54,6 +57,8 @@ public class MainActivity extends Activity implements Session.Listener {
     private float dp;
     /** Quelques images récentes, pour ne pas les redécoder à chaque surbrillance. */
     private final Map<String, Bitmap> images = new HashMap<String, Bitmap>();
+    /** Premier démarrage : la langue n'a jamais été choisie ; 0 = français surligné, 1 = anglais. */
+    private int langSel = -1;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -63,8 +68,12 @@ public class MainActivity extends Activity implements Session.Listener {
         // (constaté avec PinyinIME sur Android 2.3 : les chiffres n'arrivaient jamais).
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM, WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
         root = Library.root(this);
+        String lang = getSharedPreferences("herodio", MODE_PRIVATE).getString("lang", null);
+        I18n.setEnglish("en".equals(lang));
         importSdFolder();
-        if (!handleView(getIntent())) showLibrary();
+        boolean viewing = handleView(getIntent());
+        if (lang == null) { langSel = 0; showLanguage(); }
+        else if (!viewing) showLibrary();
     }
 
     @Override
@@ -84,7 +93,7 @@ public class MainActivity extends Activity implements Session.Listener {
         File h = new File(Environment.getExternalStorageDirectory(), "Herodio");
         h.mkdirs();
         int n = Library.importFolder(h, root);
-        if (n > 0) message = n + " nouvelle(s) histoire(s) ajoutée(s)";
+        if (n > 0) message = tr("{} nouvelle(s) histoire(s) ajoutée(s)", n);
     }
 
     /** « Ouvrir avec Herodio » depuis un gestionnaire de fichiers. */
@@ -95,19 +104,19 @@ public class MainActivity extends Activity implements Session.Listener {
     }
 
     private void importUri(final Uri uri) {
-        message = "Ajout de l'histoire…";
-        showLibrary();
+        message = tr("Ajout de l'histoire…");
+        if (langSel < 0) showLibrary();
         new Thread() {
             public void run() {
                 String msg;
                 try {
                     InputStream in = getContentResolver().openInputStream(uri);
-                    try { msg = "Histoire ajoutée : " + Library.load(Library.importPack(in, root, null)).title; } finally { in.close(); }
+                    try { msg = tr("Histoire ajoutée : {}", Library.load(Library.importPack(in, root, null)).title); } finally { in.close(); }
                 } catch (Exception e) {
-                    msg = "Ce fichier n'est pas une histoire Herodio valide.";
+                    msg = tr("Ce fichier n'est pas une histoire Herodio valide.");
                 }
                 final String m = msg;
-                runOnUiThread(new Runnable() { public void run() { message = m; showLibrary(); } });
+                runOnUiThread(new Runnable() { public void run() { message = m; if (langSel < 0) showLibrary(); } });
             }
         }.start();
     }
@@ -195,6 +204,32 @@ public class MainActivity extends Activity implements Session.Listener {
         return b;
     }
 
+    // ---------------------------------------------------------------- langue (premier démarrage)
+
+    private void showLanguage() {
+        LinearLayout col = page(ACCENT, null);
+        TextView name = text("Herodio", 34, INK, true), ask = text("Choisis ta langue · Choose your language", 18, MUTED, false);
+        name.setGravity(Gravity.CENTER);
+        ask.setGravity(Gravity.CENTER);
+        add(col, name, 60);
+        add(col, ask, 6);
+        String[] names = { "Français", "English" };
+        for (int i = 0; i < 2; i++) {
+            final boolean en = i == 1;
+            boolean sel = i == langSel;
+            add(col, pill((i + 1) + "  " + names[i], sel ? ACCENT : Color.WHITE, sel ? Color.WHITE : INK, new View.OnClickListener() {
+                public void onClick(View v) { setLanguage(en); }
+            }), i == 0 ? 28 : 12);
+        }
+    }
+
+    private void setLanguage(boolean en) {
+        getSharedPreferences("herodio", MODE_PRIVATE).edit().putString("lang", en ? "en" : "fr").commit();
+        I18n.setEnglish(en);
+        langSel = -1;
+        showLibrary();
+    }
+
     // ---------------------------------------------------------------- bibliothèque
 
     private void showLibrary() {
@@ -202,19 +237,26 @@ public class MainActivity extends Activity implements Session.Listener {
         library = Library.list(root);
         libSel = Math.min(libSel, Math.max(0, library.size() - 1));
         LinearLayout col = page(ACCENT, null);
-        add(col, text("Mes histoires", 32, INK, true), 0);
+        LinearLayout head = new LinearLayout(this);
+        head.setGravity(Gravity.CENTER_VERTICAL);
+        head.addView(text(tr("Mes histoires"), 32, INK, true), new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
+        // Changer de langue : le bouton porte le nom de l'autre langue.
+        head.addView(pill(I18n.english() ? "Français" : "English", Color.WHITE, INK, new View.OnClickListener() {
+            public void onClick(View v) { setLanguage(!I18n.english()); }
+        }));
+        add(col, head, 0);
         if (Build.VERSION.SDK_INT >= 19) {
-            add(col, pill("+  Ajouter une histoire", ACCENT, Color.WHITE, new View.OnClickListener() {
+            add(col, pill(tr("+  Ajouter une histoire"), ACCENT, Color.WHITE, new View.OnClickListener() {
                 public void onClick(View v) {
                     startActivityForResult(new Intent(OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*"), REQ_IMPORT);
                 }
             }), 10);
         } else {
-            add(col, text("Copie tes fichiers .aistory dans le dossier « Herodio » de la carte SD, puis relance l'application.", 15, MUTED, false), 6);
+            add(col, text(tr("Copie tes fichiers .aistory dans le dossier « Herodio » de la carte SD, puis relance l'application."), 15, MUTED, false), 6);
         }
         if (message.length() > 0) add(col, text(message, 16, CHOICE[0], true), 10);
         if (library.isEmpty()) {
-            add(col, text("Aucune histoire pour l'instant. Crée-en une avec Herodio Studio, puis « Exporter mon histoire » → Android.", 18, MUTED, false), 24);
+            add(col, text(tr("Aucune histoire pour l'instant. Crée-en une avec Herodio Studio, puis « Exporter mon histoire » → Android."), 18, MUTED, false), 24);
             return;
         }
         // Deux colonnes sur tablette ou en paysage, une sur téléphone.
@@ -233,7 +275,7 @@ public class MainActivity extends Activity implements Session.Listener {
             if (i == libSel) scrollTo(card);
         }
         if (library.size() % cols != 0) row.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1));
-        add(col, text("Appui long sur une histoire pour la supprimer.", 13, MUTED, false), 16);
+        add(col, text(tr("Appui long sur une histoire pour la supprimer."), 13, MUTED, false), 16);
     }
 
     private View storyCard(final int i, int widthDp) {
@@ -253,7 +295,7 @@ public class MainActivity extends Activity implements Session.Listener {
         TextView title = text(e.story.title, 21, INK, true);
         title.setPadding(px(14), px(10), px(14), 0);
         card.addView(title);
-        String sub = e.story.description.length() > 0 ? e.story.description : (e.story.author.length() > 0 ? "par " + e.story.author : "");
+        String sub = e.story.description.length() > 0 ? e.story.description : (e.story.author.length() > 0 ? tr("par {}", e.story.author) : "");
         if (sub.length() > 0) {
             TextView d = text(sub, 15, MUTED, false);
             d.setPadding(px(14), px(2), px(14), 0);
@@ -277,11 +319,11 @@ public class MainActivity extends Activity implements Session.Listener {
 
     private void confirmDelete(final int i) {
         final Library.Entry e = library.get(i);
-        new AlertDialog.Builder(this).setTitle("Supprimer « " + e.story.title + " » ?")
-            .setPositiveButton("Supprimer", new DialogInterface.OnClickListener() {
+        new AlertDialog.Builder(this).setTitle(tr("Supprimer « {} » ?", e.story.title))
+            .setPositiveButton(tr("Supprimer"), new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface d, int w) { Library.deleteTree(e.dir); message = ""; showLibrary(); }
             })
-            .setNegativeButton("Annuler", null).show();
+            .setNegativeButton(tr("Annuler"), null).show();
     }
 
     private void open(int i) {
@@ -312,7 +354,7 @@ public class MainActivity extends Activity implements Session.Listener {
         add(col, top, 0);
         String inv = s.inventory();
         if (inv.length() > 0) {
-            TextView bag = text((Build.VERSION.SDK_INT >= 19 ? "🎒 " : "Sac : ") + inv, 15, Color.WHITE, true);
+            TextView bag = text(Build.VERSION.SDK_INT >= 19 ? "🎒 " + inv : tr("Sac : {}", inv), 15, Color.WHITE, true);
             bag.setBackgroundDrawable(box(VIOLET, 0, 16));
             bag.setPadding(px(12), px(6), px(12), px(6));
             LinearLayout wrap = new LinearLayout(this);
@@ -352,11 +394,11 @@ public class MainActivity extends Activity implements Session.Listener {
         String[] options = s.options();
         for (int i = 0; i < options.length; i++) add(body, choiceButton(s, i, options[i]), 12);
         if (options.length == 0 && end == null) {
-            add(body, pill("Suivant  ▶", color, Color.WHITE, new View.OnClickListener() { public void onClick(View v) { s.next(); } }), 16);
+            add(body, pill(tr("Suivant  ▶"), color, Color.WHITE, new View.OnClickListener() { public void onClick(View v) { s.next(); } }), 16);
         }
         if (end != null) {
-            add(body, pill("Rejouer", color, Color.WHITE, new View.OnClickListener() { public void onClick(View v) { s.restart(); } }), 16);
-            add(body, pill("Mes histoires", Color.WHITE, INK, new View.OnClickListener() { public void onClick(View v) { closeStory(); } }), 10);
+            add(body, pill(tr("Rejouer"), color, Color.WHITE, new View.OnClickListener() { public void onClick(View v) { s.restart(); } }), 16);
+            add(body, pill(tr("Mes histoires"), Color.WHITE, INK, new View.OnClickListener() { public void onClick(View v) { closeStory(); } }), 10);
         }
         col.addView(body);
         if (fresh) { // fondu à chaque nouveau moment de l'histoire
@@ -410,6 +452,17 @@ public class MainActivity extends Activity implements Session.Listener {
     }
 
     private boolean handleKey(int code) {
+        if (langSel >= 0) {
+            switch (code) {
+                case KeyEvent.KEYCODE_DPAD_UP: case KeyEvent.KEYCODE_DPAD_DOWN: case KeyEvent.KEYCODE_DPAD_LEFT: case KeyEvent.KEYCODE_DPAD_RIGHT:
+                    langSel = 1 - langSel; showLanguage(); return true;
+                case KeyEvent.KEYCODE_DPAD_CENTER: case KeyEvent.KEYCODE_ENTER: case KeyEvent.KEYCODE_SPACE: case KeyEvent.KEYCODE_BUTTON_A: case KeyEvent.KEYCODE_BUTTON_X:
+                    setLanguage(langSel == 1); return true;
+                case KeyEvent.KEYCODE_1: setLanguage(false); return true;
+                case KeyEvent.KEYCODE_2: setLanguage(true); return true;
+            }
+            return false;
+        }
         if (session != null) {
             switch (code) {
                 case KeyEvent.KEYCODE_DPAD_UP: case KeyEvent.KEYCODE_DPAD_LEFT: session.select(-1); return true;

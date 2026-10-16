@@ -2,6 +2,7 @@
 
 use crate::audio::Audio;
 use crate::engine::{Engine, Node, Status};
+use crate::i18n::{fill, tr};
 use crate::pack::Pack;
 
 pub struct Session {
@@ -119,16 +120,16 @@ impl Session {
 
     pub fn options(&self) -> Vec<String> {
         match self.engine.current() {
-            Some(Node::Choice { options, .. }) => options.iter().enumerate().map(|(i, o)| if o.text.is_empty() { format!("Choix {}", i + 1) } else { o.text.clone() }).collect(),
+            Some(Node::Choice { options, .. }) => options.iter().enumerate().map(|(i, o)| if o.text.is_empty() { fill(tr("Choix {}"), &[&(i + 1).to_string()]) } else { o.text.clone() }).collect(),
             _ => vec![],
         }
     }
 
     pub fn title_text(&self) -> (String, String) {
         match (self.engine.status, self.engine.current()) {
-            (Status::Error, _) => ("Oups !".into(), "Cette histoire tourne en rond sans fin. Demande à son auteur de la vérifier.".into()),
+            (Status::Error, _) => (tr("Oups !").into(), tr("Cette histoire tourne en rond sans fin. Demande à son auteur de la vérifier.").into()),
             (_, Some(Node::Scene { title, text, .. } | Node::Choice { title, text, .. } | Node::End { title, text, .. })) => (title.clone(), text.clone()),
-            _ => ("Fin".into(), "L'histoire s'arrête ici.".into()),
+            _ => (tr("Fin").into(), tr("L'histoire s'arrête ici.").into()),
         }
     }
 
@@ -147,10 +148,10 @@ impl Session {
 
 pub fn end_label(kind: &str) -> &'static str {
     match kind {
-        "happy" => "Fin heureuse",
-        "sad" => "Fin triste",
-        "secret" => "Fin secrète !",
-        _ => "Fin",
+        "happy" => tr("Fin heureuse"),
+        "sad" => tr("Fin triste"),
+        "secret" => tr("Fin secrète !"),
+        _ => tr("Fin"),
     }
 }
 

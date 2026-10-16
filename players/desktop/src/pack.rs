@@ -1,6 +1,7 @@
 //! Lecture des packs Herodio : fichier .aistory (ZIP) ou dossier décompressé (ex. carte SD).
 
 use crate::engine::Story;
+use crate::i18n::{fill, tr};
 use std::io::Read;
 use std::path::{Component, Path, PathBuf};
 
@@ -13,9 +14,9 @@ impl Pack {
     pub fn open(path: &Path) -> Result<Pack, String> {
         let mut p = Pack { path: path.to_path_buf(), story: placeholder() };
         let json = p.read("story.json")?;
-        let story: Story = serde_json::from_slice(&json).map_err(|e| format!("story.json invalide : {e}"))?;
-        if story.format != "herodio-story" { return Err("ce n'est pas une histoire Herodio".into()); }
-        if story.version > 1 { return Err("histoire créée avec une version plus récente d'Herodio".into()); }
+        let story: Story = serde_json::from_slice(&json).map_err(|e| fill(tr("story.json invalide : {}"), &[&e.to_string()]))?;
+        if story.format != "herodio-story" { return Err(tr("ce n'est pas une histoire Herodio").into()); }
+        if story.version > 1 { return Err(tr("histoire créée avec une version plus récente d'Herodio").into()); }
         p.story = story;
         Ok(p)
     }
@@ -23,14 +24,14 @@ impl Pack {
     /// Lit un fichier du pack. Les chemins viennent du pack : on refuse toute sortie du dossier.
     pub fn read(&self, rel: &str) -> Result<Vec<u8>, String> {
         if Path::new(rel).components().any(|c| !matches!(c, Component::Normal(_))) {
-            return Err(format!("chemin refusé : {rel}"));
+            return Err(fill(tr("chemin refusé : {}"), &[rel]));
         }
         let mut buf = Vec::new();
         if self.path.is_dir() {
             buf = std::fs::read(self.path.join(rel)).map_err(|e| format!("{rel} : {e}"))?;
         } else {
             let f = std::fs::File::open(&self.path).map_err(|e| e.to_string())?;
-            let mut z = zip::ZipArchive::new(f).map_err(|e| format!("archive abîmée : {e}"))?;
+            let mut z = zip::ZipArchive::new(f).map_err(|e| fill(tr("archive abîmée : {}"), &[&e.to_string()]))?;
             z.by_name(rel).map_err(|e| format!("{rel} : {e}"))?.read_to_end(&mut buf).map_err(|e| e.to_string())?;
         }
         Ok(buf)
@@ -57,7 +58,7 @@ fn scan_into(dir: &Path, depth: u32, out: &mut Vec<Pack>) {
         if is_pack {
             match Pack::open(&p) {
                 Ok(pk) => out.push(pk),
-                Err(err) => eprintln!("Histoire ignorée {} : {err}", p.display()),
+                Err(err) => eprintln!("{}", fill(tr("Histoire ignorée {} : {}"), &[&p.display().to_string(), &err])),
             }
         } else if p.is_dir() && depth < 2 {
             scan_into(&p, depth + 1, out);
@@ -80,9 +81,9 @@ pub fn library_dir() -> PathBuf {
 
 /// Copie un pack dans la bibliothèque ; renvoie son nouveau chemin.
 pub fn import(src: &Path, lib: &Path) -> Result<PathBuf, String> {
-    if src.is_dir() { return Err("importe un fichier .aistory".into()); }
+    if src.is_dir() { return Err(tr("importe un fichier .aistory").into()); }
     Pack::open(src)?;
-    let dst = lib.join(src.file_name().ok_or("nom de fichier invalide")?);
+    let dst = lib.join(src.file_name().ok_or(tr("nom de fichier invalide"))?);
     std::fs::copy(src, &dst).map_err(|e| e.to_string())?;
     Ok(dst)
 }

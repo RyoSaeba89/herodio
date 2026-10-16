@@ -1,4 +1,5 @@
 // Illustrations : import (PNG, JPEG, WebP, SVG…), vignettes, et conversion en JPEG à la taille de l'appareil pour l'export.
+import { t } from '../i18n';
 import { uid, type Media } from '../model/project';
 import { useStore } from '../store';
 import { extOf, getBlob, putBlob } from './media';
@@ -23,7 +24,7 @@ function loadImage(blob: Blob): Promise<HTMLImageElement> {
     const img = new Image();
     const url = URL.createObjectURL(blob);
     img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image illisible')); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error(t('Image illisible'))); };
     img.src = url;
   });
 }
@@ -32,7 +33,7 @@ export const IMAGE_ACCEPT = '.png,.jpg,.jpeg,.webp,.gif,.svg,image/*';
 
 export async function addImage(blob: Blob, name: string): Promise<Media> {
   if (blob.type === '' && /\.svg$/i.test(name)) blob = new Blob([blob], { type: 'image/svg+xml' });
-  try { await loadImage(blob); } catch { throw new Error(`Le fichier « ${name} » n’est pas une image que je sais lire.`); }
+  try { await loadImage(blob); } catch { throw new Error(t('Le fichier « {name} » n’est pas une image que je sais lire.', { name })); }
   const id = uid();
   await putBlob(id, blob);
   const m: Media = { id, name, category: 'image', ext: blob.type === 'image/svg+xml' ? 'svg' : extOf(blob, name), duration: 0 };
@@ -61,6 +62,6 @@ export async function rasterize(blob: Blob, w: number, h: number, mode: 'fit' | 
   g.fillStyle = '#ffffff'; // pas de transparence en JPEG
   g.fillRect(0, 0, cw, ch);
   g.drawImage(img, sx, sy, sw, sh, 0, 0, cw, ch);
-  const out = await new Promise<Blob>((res, rej) => canvas.toBlob((b) => (b ? res(b) : rej(new Error('Conversion impossible'))), 'image/jpeg', quality));
+  const out = await new Promise<Blob>((res, rej) => canvas.toBlob((b) => (b ? res(b) : rej(new Error(t('Conversion impossible')))), 'image/jpeg', quality));
   return new Uint8Array(await out.arrayBuffer());
 }

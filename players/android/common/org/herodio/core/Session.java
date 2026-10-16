@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 
 import android.media.MediaPlayer;
 
+import static org.herodio.core.I18n.tr;
+
 /** Une partie en cours : moteur + son. Partagé par les lecteurs Android 2.3 et Android moderne. */
 public final class Session implements MediaPlayer.OnCompletionListener {
     public interface Listener { void onChange(); }
@@ -143,28 +145,28 @@ public final class Session implements MediaPlayer.OnCompletionListener {
         if (engine.status != Engine.PLAYING || !"choice".equals(engine.node.type)) return new String[0];
         Engine.Option[] o = engine.node.options;
         String[] out = new String[o.length];
-        for (int i = 0; i < o.length; i++) out[i] = o[i].text.length() > 0 ? o[i].text : "Choix " + (i + 1);
+        for (int i = 0; i < o.length; i++) out[i] = o[i].text.length() > 0 ? o[i].text : tr("Choix {}", i + 1);
         return out;
     }
 
     public String title() {
-        if (engine.status == Engine.ERROR) return "Oups !";
-        return engine.node != null ? engine.node.title : "Fin";
+        if (engine.status == Engine.ERROR) return tr("Oups !");
+        return engine.node != null ? engine.node.title : tr("Fin");
     }
 
     public String text() {
-        if (engine.status == Engine.ERROR) return "Cette histoire tourne en rond sans fin. Demande à son auteur de la vérifier.";
-        return engine.node != null ? engine.node.text : "L'histoire s'arrête ici.";
+        if (engine.status == Engine.ERROR) return tr("Cette histoire tourne en rond sans fin. Demande à son auteur de la vérifier.");
+        return engine.node != null ? engine.node.text : tr("L'histoire s'arrête ici.");
     }
 
     /** Libellé de fin, ou null si l'histoire continue. */
     public String endLabel() {
         if (engine.status == Engine.PLAYING) return null;
         String k = engine.node != null ? engine.node.kind : null;
-        if ("happy".equals(k)) return "Fin heureuse";
-        if ("sad".equals(k)) return "Fin triste";
-        if ("secret".equals(k)) return "Fin secrète !";
-        return "Fin";
+        if ("happy".equals(k)) return tr("Fin heureuse");
+        if ("sad".equals(k)) return tr("Fin triste");
+        if ("secret".equals(k)) return tr("Fin secrète !");
+        return tr("Fin");
     }
 
     public String inventory() {

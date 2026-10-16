@@ -1,4 +1,5 @@
 import { assignSlotSound, hasAudio, simpleSound, soundSlots, uid, type Media, type Sound, type TrackRole } from '../model/project';
+import { dec } from '../i18n';
 import { useStore } from '../store';
 
 export function getSlotSound(key: string): Sound | null {
@@ -45,4 +46,4 @@ export function attachMediaToBlock(blockId: string, mediaId: string) {
 }
 
 export const fmtTime = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-export const fmtDur = (s: number) => (s < 60 ? `${s.toFixed(1).replace('.', ',')} s` : fmtTime(s));
+export const fmtDur = (s: number) => (s < 60 ? `${dec(s)} s` : fmtTime(s));

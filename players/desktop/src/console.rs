@@ -2,6 +2,7 @@
 
 use crate::audio::Audio;
 use crate::engine::Status;
+use crate::i18n::{self, fill, tr};
 use crate::pack::{self, Pack};
 use crate::session::{end_label, Session};
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
@@ -10,10 +11,10 @@ use std::io::{stdout, Write};
 use std::path::PathBuf;
 use std::time::Duration;
 
-pub fn run(open: Option<PathBuf>) -> std::io::Result<()> {
+pub fn run(open: Option<PathBuf>, lang_chosen: bool) -> std::io::Result<()> {
     let mut audio = Audio::new();
     terminal::enable_raw_mode()?;
-    let r = run_inner(open, &mut audio);
+    let r = run_inner(open, lang_chosen, &mut audio);
     terminal::disable_raw_mode()?;
     execute!(stdout(), cursor::Show)?;
     r
@@ -48,8 +49,28 @@ fn key() -> std::io::Result<Option<KeyCode>> {
     Ok(None)
 }
 
-fn run_inner(open: Option<PathBuf>, audio: &mut Audio) -> std::io::Result<()> {
+/// Premier démarrage : 1 = français, 2 = anglais (les flèches et Entrée marchent aussi, pour les boutons GPIO).
+fn ask_language(lib: &std::path::Path) -> std::io::Result<()> {
+    let mut english = false;
+    loop {
+        let mark = |on: bool| if on { ">" } else { " " };
+        draw(&["== HERODIO ==".into(), String::new(), "Choisis ta langue · Choose your language".into(), String::new(),
+            format!("{} 1. Français", mark(!english)), format!("{} 2. English", mark(english))])?;
+        match key()? {
+            Some(KeyCode::Char('1')) => english = false,
+            Some(KeyCode::Char('2')) => english = true,
+            Some(KeyCode::Up | KeyCode::Down | KeyCode::Left | KeyCode::Right) => { english = !english; continue; }
+            Some(KeyCode::Enter | KeyCode::Char(' ')) => {}
+            _ => continue,
+        }
+        i18n::choose(lib, english);
+        return Ok(());
+    }
+}
+
+fn run_inner(open: Option<PathBuf>, lang_chosen: bool, audio: &mut Audio) -> std::io::Result<()> {
     let lib = pack::library_dir();
+    if !lang_chosen { ask_language(&lib)?; }
     let mut session = open.and_then(|p| Pack::open(&p).ok()).map(|p| Session::new(p, audio));
     let mut library = pack::scan(&lib);
     let mut sel = 0usize;
@@ -68,12 +89,12 @@ fn run_inner(open: Option<PathBuf>, audio: &mut Audio) -> std::io::Result<()> {
                 l.push(String::new());
                 for (i, o) in s.options().iter().enumerate() { l.push(format!("{} {}. {}", if i == s.selected { ">" } else { " " }, i + 1, o)); }
                 let inv = s.inventory();
-                if !inv.is_empty() { l.push(format!("Sac : {}", inv.join(", "))); }
+                if !inv.is_empty() { l.push(fill(tr("Sac : {}"), &[&inv.join(", ")])); }
                 l.push(String::new());
                 l.push(match s.engine.status {
-                    Status::Playing if s.options().is_empty() => "[Entrée] suivant   [Échap] menu".into(),
-                    Status::Playing => "[↑↓] choisir  [Entrée] valider  [Échap] menu".into(),
-                    _ => "[Entrée] rejouer   [Échap] menu".into(),
+                    Status::Playing if s.options().is_empty() => tr("[Entrée] suivant   [Échap] menu").into(),
+                    Status::Playing => tr("[↑↓] choisir  [Entrée] valider  [Échap] menu").into(),
+                    _ => tr("[Entrée] rejouer   [Échap] menu").into(),
                 });
                 draw(&l)?;
                 dirty = false;
@@ -92,11 +113,11 @@ fn run_inner(open: Option<PathBuf>, audio: &mut Audio) -> std::io::Result<()> {
             }
         } else {
             if dirty {
-                let mut l = vec!["== HERODIO - Mes histoires ==".to_string(), String::new()];
-                if library.is_empty() { l.push(format!("Aucune histoire. Copie des fichiers .aistory dans {}", lib.display())); }
+                let mut l = vec![tr("== HERODIO - Mes histoires ==").to_string(), String::new()];
+                if library.is_empty() { l.push(fill(tr("Aucune histoire. Copie des fichiers .aistory dans {}"), &[&lib.display().to_string()])); }
                 for (i, p) in library.iter().enumerate() { l.push(format!("{} {}", if i == sel { ">" } else { " " }, p.story.title)); }
                 l.push(String::new());
-                l.push("[↑↓] choisir  [Entrée] écouter  [q] quitter".into());
+                l.push(tr("[↑↓] choisir  [Entrée] écouter  [L] langue  [q] quitter").into());
                 draw(&l)?;
                 dirty = false;
             }
@@ -109,6 +130,7 @@ fn run_inner(open: Option<PathBuf>, audio: &mut Audio) -> std::io::Result<()> {
                     KeyCode::Enter | KeyCode::Char(' ') if !library.is_empty() => {
                         if let Ok(p) = Pack::open(&library[sel].path) { session = Some(Session::new(p, audio)); }
                     }
+                    KeyCode::Char('l' | 'L') => ask_language(&lib)?,
                     KeyCode::Char('q') | KeyCode::Esc => {
                         execute!(stdout(), terminal::Clear(terminal::ClearType::All), style::ResetColor)?;
                         return Ok(());

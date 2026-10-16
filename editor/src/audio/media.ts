@@ -1,5 +1,6 @@
 // Fichiers audio du projet : octets d'origine (persistés dans IndexedDB) et version décodée en cache.
 import { get as idbGet, set as idbSet } from 'idb-keyval';
+import { t } from '../i18n';
 import { uid, type Media, type MediaCategory } from '../model/project';
 import { useStore } from '../store';
 
@@ -33,7 +34,7 @@ export function decode(id: string): Promise<AudioBuffer> {
   let p = decoded.get(id);
   if (!p) {
     const blob = blobs.get(id);
-    if (!blob) return Promise.reject(new Error('Son introuvable'));
+    if (!blob) return Promise.reject(new Error(t('Son introuvable')));
     p = blob.arrayBuffer().then((buf) => audioContext().decodeAudioData(buf));
     p.catch(() => decoded.delete(id));
     decoded.set(id, p);
@@ -59,7 +60,7 @@ export async function addMedia(blob: Blob, name: string, category: MediaCategory
     buffer = await decode(id);
   } catch {
     blobs.delete(id);
-    throw new Error(`Le fichier « ${name} » n’est pas un son que je sais lire.`);
+    throw new Error(t('Le fichier « {name} » n’est pas un son que je sais lire.', { name }));
   }
   await idbSet('media:' + id, blob);
   const m: Media = { id, name, category, ext: extOf(blob, name), duration: buffer.duration, ...(owner ? { owner } : {}) };

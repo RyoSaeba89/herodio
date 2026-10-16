@@ -1,5 +1,6 @@
 // Modèle du projet éditable (.herodio). Voir docs/format.md.
 import type { EndKind, Test } from '../engine/engine';
+import { lang, t, type Lang } from '../i18n';
 
 export interface Clip {
   id: string;
@@ -61,6 +62,8 @@ export interface Project {
   title: string;
   author: string;
   description: string;
+  /** Langue de l'histoire : choisit la voix automatique. Absente dans les histoires d'avant la 0.2.1 (français). */
+  lang?: Lang;
   level: 'decouverte' | 'avance';
   /** Voix automatique : les textes sans enregistrement sont lus par la synthèse vocale (désactivée par défaut). */
   autoVoice: boolean;
@@ -86,26 +89,26 @@ export function newBlock(type: BlockType, x = 0, y = 0): Block {
   const b = { id: uid(), x, y };
   switch (type) {
     case 'start': return { ...b, type, next: null };
-    case 'scene': return { ...b, type, title: 'Nouvelle scène', text: '', sound: null, image: null, next: null };
+    case 'scene': return { ...b, type, title: t('Nouvelle scène'), text: '', sound: null, image: null, next: null };
     case 'choice': return {
-      ...b, type, title: 'Un choix', text: '', sound: null, image: null,
+      ...b, type, title: t('Un choix'), text: '', sound: null, image: null,
       options: [
-        { id: uid(), text: 'Choix 1', sound: null, next: null },
-        { id: uid(), text: 'Choix 2', sound: null, next: null },
+        { id: uid(), text: t('Choix {n}', { n: 1 }), sound: null, next: null },
+        { id: uid(), text: t('Choix {n}', { n: 2 }), sound: null, next: null },
       ],
     };
     case 'item': return { ...b, type, op: 'give', item: null, next: null, else: null };
     case 'cond': return { ...b, type, test: null, then: null, else: null };
     case 'var': return { ...b, type, op: 'add', var: null, value: 1, next: null };
     case 'loop': return { ...b, type, target: null, reset: false };
-    case 'end': return { ...b, type, kind: 'happy', title: 'Fin', text: '', sound: null, image: null };
+    case 'end': return { ...b, type, kind: 'happy', title: t('Fin'), text: '', sound: null, image: null };
   }
 }
 
-export function newProject(title = 'Mon histoire'): Project {
+export function newProject(title = t('Mon histoire')): Project {
   const start = newBlock('start', 0, 0);
   return {
-    format: 'herodio-project', version: 1, id: uid(), title, author: '', description: '',
+    format: 'herodio-project', version: 1, id: uid(), title, author: '', description: '', lang,
     level: 'decouverte', autoVoice: false, cover: null, color: STORY_COLORS[0], blocks: [start], items: [], variables: [], media: [],
   };
 }
@@ -117,13 +120,13 @@ export function ports(b: Block): Port[] {
   switch (b.type) {
     case 'start':
     case 'scene':
-    case 'var': return [{ port: 'next', label: 'Ensuite', target: b.next }];
-    case 'choice': return b.options.map((o, i) => ({ port: 'opt:' + o.id, label: o.text || `Choix ${i + 1}`, target: o.next }));
+    case 'var': return [{ port: 'next', label: t('Ensuite'), target: b.next }];
+    case 'choice': return b.options.map((o, i) => ({ port: 'opt:' + o.id, label: o.text || t('Choix {n}', { n: i + 1 }), target: o.next }));
     case 'item': return b.op === 'has'
-      ? [{ port: 'next', label: 'Oui', target: b.next }, { port: 'else', label: 'Non', target: b.else }]
-      : [{ port: 'next', label: 'Ensuite', target: b.next }];
-    case 'cond': return [{ port: 'then', label: 'Oui', target: b.then }, { port: 'else', label: 'Non', target: b.else }];
-    case 'loop': return [{ port: 'target', label: 'Revenir à', target: b.target, dashed: true }];
+      ? [{ port: 'next', label: t('Oui'), target: b.next }, { port: 'else', label: t('Non'), target: b.else }]
+      : [{ port: 'next', label: t('Ensuite'), target: b.next }];
+    case 'cond': return [{ port: 'then', label: t('Oui'), target: b.then }, { port: 'else', label: t('Non'), target: b.else }];
+    case 'loop': return [{ port: 'target', label: t('Revenir à'), target: b.target, dashed: true }];
     case 'end': return [];
   }
 }
@@ -143,7 +146,7 @@ export function soundSlots(b: Block): { key: string; label: string; sound: Sound
   if (b.type === 'scene' || b.type === 'end') return [{ key: b.id, label: b.title, sound: b.sound }];
   if (b.type === 'choice') return [
     { key: b.id, label: b.title, sound: b.sound },
-    ...b.options.map((o, i) => ({ key: `${b.id}/${o.id}`, label: o.text || `Choix ${i + 1}`, sound: o.sound })),
+    ...b.options.map((o, i) => ({ key: `${b.id}/${o.id}`, label: o.text || t('Choix {n}', { n: i + 1 }), sound: o.sound })),
   ];
   return [];
 }
@@ -178,7 +181,7 @@ export function simpleSound(m: Media, role: TrackRole = 'voix'): Sound {
   return {
     duck: false,
     tracks: [{
-      id: uid(), name: role === 'voix' ? 'Voix' : m.name, role, volume: 1, muted: false, solo: false,
+      id: uid(), name: role === 'voix' ? t('Voix') : m.name, role, volume: 1, muted: false, solo: false,
       clips: [{ id: uid(), media: m.id, start: 0, offset: 0, duration: m.duration, gain: 1, fadeIn: 0, fadeOut: 0 }],
     }],
   };

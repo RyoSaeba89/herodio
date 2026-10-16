@@ -6,6 +6,8 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 page.on('console', (m) => m.type() === 'error' && !m.text().includes('404') && errors.push(m.text()));
+// Langue de l'interface (HERODIO_LANG=en pour l'anglais), sans passer par l'écran du premier démarrage.
+await page.addInitScript((l) => localStorage.setItem('herodio-lang', l), process.env.HERODIO_LANG ?? 'fr');
 await page.goto('http://localhost:1420');
 await page.evaluate(() => indexedDB.deleteDatabase('keyval-store'));
 await page.reload();

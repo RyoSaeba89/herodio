@@ -1,5 +1,7 @@
 # Composants tiers
 
+*[English version](THIRD_PARTY.en.md)*
+
 Le code d'Herodio est sous licence MIT ([LICENSE](LICENSE)). Les programmes publiés incluent aussi les composants suivants.
 
 ## Herodio Studio (éditeur)
@@ -7,6 +9,7 @@ Le code d'Herodio est sous licence MIT ([LICENSE](LICENSE)). Les programmes publ
 | Composant | Licence | Source |
 |---|---|---|
 | Voix Piper `fr_FR-siwis-medium` (données SIWIS) | **CC BY 4.0** — attribution obligatoire | https://huggingface.co/rhasspy/piper-voices · https://creativecommons.org/licenses/by/4.0/ |
+| Voix Piper `en_US-ljspeech-medium` (données LJ Speech) | domaine public | https://huggingface.co/rhasspy/piper-voices · https://keithito.com/LJ-Speech-Dataset/ |
 | piper_phonemize (WebAssembly), via `@diffusionstudio/piper-wasm` 1.0.0 | MIT | https://github.com/diffusion-studio/piper-wasm |
 | Données et code d'espeak-ng, inclus dans piper_phonemize | **GPL-3.0** ([texte](LICENSES/GPL-3.0.txt)) | https://github.com/espeak-ng/espeak-ng · https://github.com/rhasspy/piper-phonemize |
 | onnxruntime-web 1.30.0 | MIT | https://github.com/microsoft/onnxruntime |
@@ -24,4 +27,4 @@ espeak-ng est un composant séparé, chargé à part (`editor/public/tts/vendor/
 
 ## Histoires fournies
 
-Les adaptations, illustrations, bruitages et musiques sont des créations Herodio sous **CC0**. Les contes d'origine sont du domaine public. La narration utilise la voix Siwis (CC BY 4.0 ci-dessus) ; l'attribution figure dans le `metadata.json` de chaque pack.
+Les adaptations, illustrations, bruitages et musiques sont des créations Herodio sous **CC0**. Les contes d'origine sont du domaine public. La narration utilise la voix Siwis (CC BY 4.0 ci-dessus) pour les versions françaises et la voix LJ Speech (domaine public) pour les versions anglaises ; l'attribution figure dans le `metadata.json` de chaque pack.

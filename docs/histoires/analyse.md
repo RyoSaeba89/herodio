@@ -1,5 +1,7 @@
 # Les histoires fournies : étude et adaptation
 
+*[English version](analyse.en.md)*
+
 Cinq contes et fables du patrimoine ont été **étudiés, décortiqués puis réécrits** en histoires interactives pour les 6-8 ans (CP-CE2). Les textes d'origine sont du domaine public. Les adaptations, les sons et les illustrations sont des créations originales placées sous licence CC0.
 
 ## 1. Ce que dit la recherche, et ce qu'on en tire
@@ -19,7 +21,7 @@ Cinq contes et fables du patrimoine ont été **étudiés, décortiqués puis r�
 - **Peur dosée** : le loup ou l'ogre font un peu peur, mais personne n'est mangé ni blessé. Les méchants sont ridiculisés, puis s'enfuient ou deviennent gentils.
 - **Au moins trois fins** : une heureuse, une « à retenter » (douce), une **secrète** qui récompense la curiosité.
 - **Partie complète en 3 à 7 minutes**, ce qui correspond à l'attention d'un enfant de cet âge.
-- **Narration par la voix automatique** (Piper, Siwis). Enfants et enseignants peuvent la remplacer par leurs propres enregistrements dans l'éditeur.
+- **Narration par la voix automatique** (Piper : Siwis en français, LJ Speech en anglais). Enfants et enseignants peuvent la remplacer par leurs propres enregistrements dans l'éditeur.
 
 **Lien avec les notions STEM (cycle 2)**
 
@@ -212,6 +214,7 @@ L'enfant **est le Lièvre**. C'est le personnage le plus drôle à jouer, avec t
 
 ## 7. Sons et illustrations
 
-- **Narration** : voix automatique Piper « Siwis » (données SIWIS, CC BY 4.0), générée par Herodio Studio et modifiable comme n'importe quel son.
+- **Narration** : voix automatique Piper « Siwis » (données SIWIS, CC BY 4.0) pour les versions françaises, « LJ Speech » (domaine public) pour les versions anglaises ; générée par Herodio Studio et modifiable comme n'importe quel son.
+- **Versions anglaises** : mêmes blocs, mêmes sons et mêmes illustrations, textes traduits dans `editor/src/stories/*.en.ts`. Pour *Les trois petits cochons*, les répliques du loup reprennent la formulette anglaise d'origine de Jacobs ; pour *Le Lièvre et la Tortue*, la morale devient « Slow and steady wins the race! ».
 - **Bruitages, ambiances et musiques** : synthétisés par `tools/gen_example_audio.py` (vent, oiseaux, pas, souffle du loup, marmite, clochette…), CC0.
 - **Illustrations** : vectorielles (SVG), dessinées pour Herodio dans un style plat et coloré, CC0 (`editor/public/examples/<histoire>/*.svg`).

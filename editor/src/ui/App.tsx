@@ -4,6 +4,7 @@ import { applyAutoLayout, duplicateBlock } from '../actions';
 import { restoreBlobs } from '../audio/media';
 import { stop } from '../audio/player';
 import { TALE_EXAMPLES, TUTORIAL_EXAMPLES, type Example } from '../examples';
+import { chosenLang, lang, LANGS, setLang, t } from '../i18n';
 import { openBytes, saveBytes } from '../io/files';
 import { PROJECT_FILTER, packProject, unpackProject } from '../io/projectFile';
 import { newProject, type Project } from '../model/project';
@@ -23,6 +24,21 @@ async function openProject(): Promise<string | null> {
   return f.name;
 }
 
+/** Premier démarrage : choisir la langue (on peut la changer ensuite dans la barre d'outils). */
+function LanguagePicker() {
+  return (
+    <div className="modal-back">
+      <div className="modal welcome lang-picker">
+        <h1><span className="logo">🎧</span> Herodio Studio</h1>
+        <p className="lead">Choisis ta langue · Choose your language</p>
+        <div className="welcome-actions">
+          {LANGS.map((l) => <button key={l.id} className="welcome-card" onClick={() => setLang(l.id)}><span>🗣️</span>{l.label}</button>)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Welcome({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState('');
@@ -35,22 +51,22 @@ function Welcome({ onClose }: { onClose: () => void }) {
       <img src={x.cover} alt="" />
       <b>{x.title}</b>
       <small>{x.desc}</small>
-      <span className="notion">{loading === x.id ? '⏳ Ouverture…' : `🧩 ${x.notion}`}</span>
+      <span className="notion">{loading === x.id ? t('⏳ Ouverture…') : `🧩 ${x.notion}`}</span>
     </button>
   );
   return (
     <div className="modal-back">
       <div className="modal welcome">
-        <button className="modal-close" onClick={onClose} title="Fermer">✕</button>
+        <button className="modal-close" onClick={onClose} title={t('Fermer')}>✕</button>
         <h1><span className="logo">🎧</span> Herodio Studio</h1>
-        <p className="lead">Crée des histoires audio dont tu es le héros !</p>
+        <p className="lead">{t('Crée des histoires audio dont tu es le héros !')}</p>
         <div className="welcome-actions">
-          <button className="welcome-card new" onClick={() => start(newProject())}><span>✨</span>Nouvelle histoire</button>
-          <button className="welcome-card" onClick={() => openProject().then((n) => n && onClose()).catch((e) => setError(e.message))}><span>📂</span>Ouvrir une histoire</button>
+          <button className="welcome-card new" onClick={() => start(newProject())}><span>✨</span>{t('Nouvelle histoire')}</button>
+          <button className="welcome-card" onClick={() => openProject().then((n) => n && onClose()).catch((e) => setError(e.message))}><span>📂</span>{t('Ouvrir une histoire')}</button>
         </div>
-        <h3>🎓 Pour apprendre</h3>
+        <h3>🎓 {t('Pour apprendre')}</h3>
         <div className="story-grid">{TUTORIAL_EXAMPLES.map(card)}</div>
-        <h3>📚 Contes à jouer (6-8 ans)</h3>
+        <h3>📚 {t('Contes à jouer (6-8 ans)')}</h3>
         <div className="story-grid">{TALE_EXAMPLES.map(card)}</div>
         {error && <div className="error">{error}</div>}
       </div>
@@ -70,10 +86,10 @@ function IssuesPanel({ issues, onClose }: { issues: Issue[]; onClose: () => void
   return (
     <section className="issues">
       <div className="issues-head">
-        <b>✅ Vérification de l’histoire</b>
+        <b>✅ {t('Vérification de l’histoire')}</b>
         <button className="btn ghost" onClick={onClose}>✕</button>
       </div>
-      {issues.length === 0 && <p>Tout est parfait : ton histoire peut être jouée de bout en bout ! 🎉</p>}
+      {issues.length === 0 && <p>{t('Tout est parfait : ton histoire peut être jouée de bout en bout ! 🎉')}</p>}
       {issues.map((i, k) => (
         <button key={k} className={'issue ' + i.level} onClick={() => go(i.block)}>{icon[i.level]} {i.message}</button>
       ))}
@@ -101,9 +117,9 @@ function Editor() {
       if (p && p.blocks.length > 1) {
         const missing = await restoreBlobs(p.media.map((m) => m.id));
         useStore.getState().load(p);
-        if (missing.length) setStatus(`${missing.length} son(s) n’ont pas pu être récupérés`);
-        else setStatus('Travail récupéré ✔');
-      } else setWelcome(true);
+        if (missing.length) setStatus(t('{n} son(s) n’ont pas pu être récupérés', { n: missing.length }));
+        else setStatus(t('Travail récupéré ✔'));
+      } else if (chosenLang) setWelcome(true);
       startAutosave();
     });
   }, []);
@@ -112,9 +128,9 @@ function Editor() {
 
   const save = async () => {
     try {
-      const name = await saveBytes(`${project.title || 'histoire'}.herodio`, await packProject(project), PROJECT_FILTER);
-      if (name) setStatus('Enregistré ✔');
-    } catch (e) { setStatus('Erreur : ' + (e as Error).message); }
+      const name = await saveBytes(`${project.title || t('histoire')}.herodio`, await packProject(project), PROJECT_FILTER);
+      if (name) setStatus(t('Enregistré ✔'));
+    } catch (e) { setStatus(t('Erreur : {msg}', { msg: (e as Error).message })); }
   };
 
   useEffect(() => {
@@ -139,29 +155,32 @@ function Editor() {
       <header className="toolbar">
         <span className="logo" title="Herodio Studio">🎧</span>
         <input className="title-input" value={project.title} onFocus={() => useStore.getState().checkpoint()}
-          onChange={(e) => useStore.getState().update((p) => { p.title = e.target.value; }, false)} aria-label="Titre de l’histoire" />
+          onChange={(e) => useStore.getState().update((p) => { p.title = e.target.value; }, false)} aria-label={t('Titre de l’histoire')} />
         <div className="tb-group">
-          <button className="btn ghost" onClick={() => setWelcome(true)} title="Nouvelle histoire ou exemple">✨<span className="tb-label"> Nouveau</span></button>
-          <button className="btn ghost" title="Ouvrir une histoire" onClick={() => openProject().then((n) => n && setStatus('Ouvert : ' + n)).catch((e) => setStatus('Erreur : ' + e.message))}>📂<span className="tb-label"> Ouvrir</span></button>
-          <button className="btn ghost" onClick={save} title="Enregistrer (Ctrl+S)">💾<span className="tb-label"> Enregistrer</span></button>
+          <button className="btn ghost" onClick={() => setWelcome(true)} title={t('Nouvelle histoire ou exemple')}>✨<span className="tb-label"> {t('Nouveau')}</span></button>
+          <button className="btn ghost" title={t('Ouvrir une histoire')} onClick={() => openProject().then((n) => n && setStatus(t('Ouvert : {name}', { name: n }))).catch((e) => setStatus(t('Erreur : {msg}', { msg: e.message })))}>📂<span className="tb-label"> {t('Ouvrir')}</span></button>
+          <button className="btn ghost" onClick={save} title={t('Enregistrer (Ctrl+S)')}>💾<span className="tb-label"> {t('Enregistrer')}</span></button>
         </div>
         <div className="tb-group">
-          <button className="btn ghost" onClick={() => useStore.getState().undo()} disabled={!past} title="Annuler (Ctrl+Z)">↶</button>
-          <button className="btn ghost" onClick={() => useStore.getState().redo()} disabled={!future} title="Rétablir (Ctrl+Y)">↷</button>
-          <button className="btn ghost" onClick={() => { applyAutoLayout(); setTimeout(() => fitView({ duration: 300, maxZoom: 1 }), 50); }} title="Ranger les blocs automatiquement">🧹<span className="tb-label"> Ranger</span></button>
+          <button className="btn ghost" onClick={() => useStore.getState().undo()} disabled={!past} title={t('Annuler (Ctrl+Z)')}>↶</button>
+          <button className="btn ghost" onClick={() => useStore.getState().redo()} disabled={!future} title={t('Rétablir (Ctrl+Y)')}>↷</button>
+          <button className="btn ghost" onClick={() => { applyAutoLayout(); setTimeout(() => fitView({ duration: 300, maxZoom: 1 }), 50); }} title={t('Ranger les blocs automatiquement')}>🧹<span className="tb-label"> {t('Ranger')}</span></button>
         </div>
-        <div className="mode-switch" role="group" aria-label="Niveau">
-          <button className={!advanced ? 'on' : ''} onClick={() => useStore.getState().update((p) => { p.level = 'decouverte'; })}>🌱 Découverte</button>
-          <button className={advanced ? 'on' : ''} onClick={() => useStore.getState().update((p) => { p.level = 'avance'; })}>🚀 Avancé</button>
+        <div className="mode-switch" role="group" aria-label={t('Niveau')}>
+          <button className={!advanced ? 'on' : ''} onClick={() => useStore.getState().update((p) => { p.level = 'decouverte'; })}>🌱 {t('Découverte')}</button>
+          <button className={advanced ? 'on' : ''} onClick={() => useStore.getState().update((p) => { p.level = 'avance'; })}>🚀 {t('Avancé')}</button>
         </div>
         <span className="status">{status}</span>
-        <button className={'btn check ' + (errors ? 'bad' : warnings ? 'warn' : 'good')} onClick={() => setShowIssues(!showIssues)} title="Vérifier mon histoire">
+        <select className="lang-select" value={lang} onChange={(e) => setLang(e.target.value as typeof lang)} title={t('Langue')} aria-label={t('Langue')}>
+          {LANGS.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
+        </select>
+        <button className={'btn check ' + (errors ? 'bad' : warnings ? 'warn' : 'good')} onClick={() => setShowIssues(!showIssues)} title={t('Vérifier mon histoire')}>
           {errors ? `⛔ ${errors}` : warnings ? `⚠️ ${warnings}` : '✅'}
         </button>
         <button className="btn play-btn" onClick={() => (play ? useStore.getState().stopPlay() : useStore.getState().startPlay())}>
-          {play ? '⏹ Arrêter' : '▶ Jouer mon histoire'}
+          {play ? t('⏹ Arrêter') : t('▶ Jouer mon histoire')}
         </button>
-        <button className="btn export-btn" onClick={() => { stop(); setExporting(true); }}>📦 Exporter mon histoire</button>
+        <button className="btn export-btn" onClick={() => { stop(); setExporting(true); }}>📦 {t('Exporter mon histoire')}</button>
       </header>
       <LeftPanel />
       <main className="center">
@@ -173,6 +192,7 @@ function Editor() {
       {studio && <Studio slotKey={studio} />}
       {exporting && <ExportDialog issues={issues} onClose={() => setExporting(false)} />}
       {welcome && <Welcome onClose={() => setWelcome(false)} />}
+      {!chosenLang && <LanguagePicker />}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 // Opérations d'édition du graphe (toutes annulables).
+import { t } from './i18n';
 import { newBlock, ports, uid, withPort, type Block, type BlockType, type Project } from './model/project';
 import { useStore } from './store';
 
@@ -43,7 +44,7 @@ export function duplicateBlock(id: string) {
   copy.x += 40;
   copy.y += 40;
   if (copy.type === 'choice') copy.options = copy.options.map((o) => ({ ...o, id: uid() }));
-  if ('title' in copy) copy.title += ' (copie)';
+  if ('title' in copy) copy.title += ' ' + t('(copie)');
   st().update((p) => { p.blocks.push(copy); });
   st().select(copy.id);
 }

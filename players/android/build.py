@@ -49,6 +49,9 @@ def main():
     tc = os.path.join(B, 'test-classes')
     run('javac', '-encoding', 'UTF-8', '-nowarn', '-d', tc, '-cp', jar, os.path.join(HERE, 'common/org/herodio/core/Engine.java'), os.path.join(HERE, 'test/ConformanceTest.java'))
     run('java', '-cp', os.pathsep.join([tc, jar]), 'ConformanceTest', os.path.join(HERE, '../../spec/conformance'))
+    # Traductions anglaises : chaque tr("…") de l'application a la sienne
+    run('javac', '-encoding', 'UTF-8', '-nowarn', '-d', tc, os.path.join(HERE, 'common/org/herodio/core/I18n.java'), os.path.join(HERE, 'test/I18nTest.java'))
+    run('java', '-Dfile.encoding=UTF-8', '-cp', tc, 'I18nTest', HERE)
 
     # 2. Compilation contre l'API 9 : toute API plus récente provoque une erreur ici.
     sources = glob.glob(os.path.join(HERE, 'common/**/*.java'), recursive=True) + glob.glob(os.path.join(HERE, 'app/src/**/*.java'), recursive=True)
