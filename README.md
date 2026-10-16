@@ -2,11 +2,11 @@
 
 *[English version](README.en.md)*
 
-Herodio permet à un enfant (de 7 à 14 ans environ), à un enseignant ou à un animateur de **créer une histoire audio interactive sans écrire de code**. On relie des blocs colorés, on enregistre sa voix, on ajoute des bruitages et une ambiance, puis on joue l'histoire. On l'exporte enfin vers un PC, un Raspberry Pi, un téléphone Android, récent ou très ancien, ou un M5Stack Cardputer.
+Herodio permet à un enfant (de 7 à 14 ans environ), à un enseignant ou à un animateur de **créer une histoire audio interactive sans écrire de code**. On relie des blocs colorés, on enregistre sa voix, on ajoute des bruitages et une ambiance, puis on joue l'histoire. On l'exporte enfin vers un PC, un Raspberry Pi ou un téléphone Android, récent ou très ancien.
 
 Tout fonctionne **hors ligne**, sans compte et sans abonnement.
 
-> **Version 0.2.2-alpha** : version d'essai, en français et en anglais. Le Studio et les lecteurs PC et Android sont testés ; le Cardputer et le vrai Raspberry Pi n'ont pas encore été essayés sur l'appareil ; les premiers essais sur un vrai Xperia Play et un smartphone ont mené aux correctifs Android de la 0.2.2, à revalider sur l'appareil (voir [État du projet](#état-du-projet)).
+> **Version 0.2.2-alpha** : version d'essai, en français et en anglais. Le Studio et les lecteurs PC et Android sont testés ; le vrai Raspberry Pi n'a pas encore été essayés sur l'appareil ; les premiers essais sur un vrai Xperia Play et un smartphone ont mené aux correctifs Android de la 0.2.2, à revalider sur l'appareil (voir [État du projet](#état-du-projet)).
 
 ## Aperçu
 
@@ -37,10 +37,8 @@ Tous les fichiers sont sur la page [Releases](https://github.com/RyoSaeba89/hero
 | `herodio-player-…-linux-x64.tar.gz` | Lecteur pour PC Linux |
 | `herodio-player-…-raspberry-pi-arm64.tar.gz` | Lecteur pour Raspberry Pi 3, 4, 5 ou Zero 2 (Raspberry Pi OS 64 bits), avec les fichiers de démarrage automatique |
 | `herodio-android-….apk` | Lecteur Android, de la 2.3 (Xperia Play) à la 14 |
-| `herodio-cardputer-….bin` | Firmware M5Stack Cardputer / ADV, à flasher à l'adresse 0x0 |
 | `histoires-pc-android-raspberry-pi.zip` | Les 8 histoires prêtes à jouer (PC, Raspberry Pi, Android récent) |
 | `histoires-android23.zip` | Les 8 histoires allégées pour Android 2.3 |
-| `histoires-cardputer-carte-sd.zip` | Les 8 histoires pour le Cardputer, à décompresser à la racine de la carte microSD |
 | `stories-en-….zip` | Les mêmes 8 histoires en anglais, pour les mêmes appareils |
 
 L'installation de chaque lecteur est décrite dans [docs/lecteurs.md](docs/lecteurs.md). `SHA256SUMS.txt` permet de vérifier les téléchargements.
@@ -59,11 +57,11 @@ L'installation de chaque lecteur est décrite dans [docs/lecteurs.md](docs/lecte
   - pistes voix, ambiance et bruitage, avec muet, solo et volume ;
   - baisse automatique de l'ambiance quand quelqu'un parle (ducking).
 - **Bibliothèque de sons et d'images** : import WAV, MP3, OGG, FLAC ou M4A, et PNG, JPEG, WebP ou SVG ; catégories ; préécoute ; glisser un son ou une image sur un bloc ; repérage des médias inutilisés.
-- **Illustrations** : chaque scène, question ou fin peut avoir son image. L'histoire a aussi une couverture et une couleur. À l'export, les images sont converties en JPEG à la bonne taille pour chaque appareil (240 × 135 pour le Cardputer).
+- **Illustrations** : chaque scène, question ou fin peut avoir son image. L'histoire a aussi une couverture et une couleur. À l'export, les images sont converties en JPEG à la bonne taille pour chaque appareil.
 - **Voix automatique** (désactivée par défaut) :
   - une voix de synthèse **libre et hors ligne** lit à voix haute les textes qui n'ont pas encore d'enregistrement : scènes, questions et réponses ;
   - elle repose sur [Piper](https://github.com/rhasspy/piper) : voix « Siwis » pour les histoires en français, « LJ Speech » pour les histoires en anglais (réglage « Langue de l'histoire ») ;
-  - elle fonctionne dans la prévisualisation et elle est intégrée aux sons à l'export : **tous** les lecteurs en profitent, même Android 2.3 et le Cardputer ;
+  - elle fonctionne dans la prévisualisation et elle est intégrée aux sons à l'export : **tous** les lecteurs en profitent, même Android 2.3 ;
   - le bouton 🗣️ d'un bloc la transforme en vraie prise, modifiable dans le studio.
 - **« Jouer mon histoire »** avec le même moteur que les lecteurs :
   - le bloc en cours est mis en évidence et le chemin parcouru est surligné ;
@@ -92,7 +90,6 @@ Ce tableau distingue ce qui est écrit, compilé et testé :
 | Lecteur Windows (Rust) | ✅ | ✅ | ✅ conformité, partie complète automatisée, rendu de la fenêtre vérifié par capture ; ⚠️ son et clavier non essayés à la main |
 | Lecteur Linux / Raspberry Pi (Rust) | ✅ | ✅ x86_64 Linux (WSL) et aarch64 (compilation croisée) | ✅ tests sur Linux x86_64 et sous émulation aarch64 (qemu), mode console joué sur les 8 histoires exportées ; **à valider sur un vrai Raspberry Pi** |
 | Lecteur Android 2.3 → 14 (Java) | ✅ | ✅ APK signé v1+v2, compilé contre l'API 9 | ✅ émulateurs Android 2.3.7, 5.1 et 14 (import, lecture WAV, illustrations, D-pad, clavier, toucher, histoires complètes, confettis, rotation, réécoute) ; premiers essais sur un vrai Xperia Play et un smartphone, **correctifs de la 0.2.2 à revalider sur l'appareil** |
-| Firmware Cardputer / ADV (C++) | ✅ | ✅ PlatformIO (ESP32-S3) | ✅ conformité du moteur sur PC ; **à valider sur l'appareil** (écran, illustrations JPEG, clavier, son, carte SD) |
 | Voix automatique (Piper : Siwis et LJ Speech, dans l'éditeur) | ✅ | ✅ | ✅ synthèse, cache, prévisualisation, prises et export testés dans Edge ; 8 s de parole calculées en 2 s environ ; narration anglaise des histoires générée avec LJ Speech |
 
 ## Architecture
@@ -108,16 +105,15 @@ editor/            Herodio Studio — React + TypeScript + React Flow + Web Audi
 players/
   desktop/         lecteur Rust (egui + rodio) : Windows, Linux, Raspberry Pi (+ mode console)
   android/         lecteur Java sans dépendance, de l'API 9 à 34, compilé sans Gradle (build.py)
-  cardputer/       firmware PlatformIO / Arduino pour M5Stack Cardputer et Cardputer ADV
 spec/
   story.schema.json   schéma du format exécutable
-  conformance/        tests partagés par les 4 moteurs
+  conformance/        tests partagés par les 3 moteurs
 docs/              formats, moteur, installation des lecteurs
 tools/             génération des bruitages et musiques (gen_sons.py) et des illustrations (illustrations/)
 editor/scripts/    installation de la voix (setup-tts.mjs) et narration des histoires fournies (gen-narration.mjs)
 ```
 
-**Principe clé** : la plateforme partage le **format de données** et les **règles du moteur**, pas le code. Chaque lecteur est natif de son appareil : Java 6 pour Android 2.3, C++ pour l'ESP32, Rust pour le PC. Les mêmes tests de conformité garantissent qu'à état égal, une histoire prend les mêmes décisions partout. Voir [docs/moteur.md](docs/moteur.md).
+**Principe clé** : la plateforme partage le **format de données** et les **règles du moteur**, pas le code. Chaque lecteur est natif de son appareil : Java 6 pour Android 2.3, Rust pour le PC. Les mêmes tests de conformité garantissent qu'à état égal, une histoire prend les mêmes décisions partout. Voir [docs/moteur.md](docs/moteur.md).
 
 L'audio est **prémixé à l'export** : un seul fichier WAV mono par moment de l'histoire, à la fréquence adaptée à l'appareil. Le mixage utilisé pour l'export est le même que celui de la prévisualisation. Voir [docs/format.md](docs/format.md).
 
@@ -153,7 +149,7 @@ npx tauri build        # exe + installateur dans src-tauri/target/release/
 
 Tests de bout en bout (Edge, sans fenêtre visible) : lancer `npm run dev`, puis `node e2e-smoke.mjs <dossier>`, `e2e-logic.mjs`, `e2e-studio.mjs`, `e2e-export.mjs`, `e2e-lang.mjs` et `e2e-title.mjs`. `HERODIO_LANG=en` les lance avec l'interface en anglais.
 
-Traductions : le code est écrit en français et `t('…')` donne la traduction anglaise (`editor/src/i18n.en.ts`) ; un test vérifie qu'aucun texte n'est oublié. Les lecteurs font de même (`players/desktop/src/i18n.rs`, `players/android/common/org/herodio/core/I18n.java`, `players/cardputer/src/i18n.h`). Les histoires anglaises sont dans `editor/src/stories/*.en.ts`.
+Traductions : le code est écrit en français et `t('…')` donne la traduction anglaise (`editor/src/i18n.en.ts`) ; un test vérifie qu'aucun texte n'est oublié. Les lecteurs font de même (`players/desktop/src/i18n.rs`, `players/android/common/org/herodio/core/I18n.java`). Les histoires anglaises sont dans `editor/src/stories/*.en.ts`.
 
 ## Licences
 

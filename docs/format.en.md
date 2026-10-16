@@ -8,7 +8,6 @@ Herodio keeps three things clearly apart:
 |---|---|---|---|
 | Editable project | `my-story.herodio` | `project.json` + original sounds (`media/`) | the editor |
 | Playback pack | `my-story.aistory` | `story.json` + `metadata.json` + premixed sounds (`assets/audio/`) | the players |
-| Cardputer SD card | `…-sd-card.zip` (`…-carte-sd.zip` in French) | the same pack, already unzipped into `herodio/<story>/` | the Cardputer |
 
 Both files are ordinary ZIP archives: you can open them with any archive tool.
 
@@ -55,7 +54,6 @@ assets/images/001.jpg   pictures and cover: baseline (non-progressive) JPEG, at 
   |---|---|
   | Windows, Android, Raspberry Pi | 44.1 kHz |
   | Android 2.3 | 22.05 kHz |
-  | Cardputer | 16 kHz |
 
 - Optional fields, ignored by a player that does not know them (the format stays at version 1):
   - `image` on scenes, choices and endings;
@@ -67,7 +65,6 @@ assets/images/001.jpg   pictures and cover: baseline (non-progressive) JPEG, at 
   | Windows and Android | 1280 × 960 at most |
   | Raspberry Pi | 1024 × 768 |
   | Android 2.3 | 640 × 480 |
-  | Cardputer | exactly 240 × 135 (cropped) |
 
 - The block identifiers in `story.json` are the editor's. Play traces can therefore be compared from one platform to another.
 - Two slots with exactly the same mix share the same file.
@@ -76,8 +73,8 @@ assets/images/001.jpg   pictures and cover: baseline (non-progressive) JPEG, at 
 
 ### Why premixed WAV?
 
-- Every target device can play it, including Android 2.3's Stagefright and the ESP32-S3, with no decoder.
-- Only one stream at a time: the Cardputer cannot mix several compressed streams.
+- Every target device can play it, including Android 2.3's Stagefright, with no decoder.
+- Only one stream at a time: old devices do not have to mix several streams.
 - What the child hears in the preview matches the pack exactly, because the same mixing code (`editor/src/audio/mixer.ts`) is used for both.
 
 The downside is bigger files. The editor shows a size estimate before exporting.

@@ -9,7 +9,6 @@ Une histoire se crée une seule fois et doit se jouer **exactement de la même f
 | TypeScript (référence) | `editor/src/engine/engine.ts` | prévisualisation de l'éditeur |
 | Rust | `players/desktop/src/engine.rs` | lecteurs Windows, Linux et Raspberry Pi |
 | Java (compatible API 9) | `players/android/common/org/herodio/core/Engine.java` | lecteur Android 2.3 → 14 |
-| C++ | `players/cardputer/src/engine.h` | firmware Cardputer |
 
 ## État du jeu
 
@@ -62,6 +61,5 @@ Chaque fichier `spec/conformance/*.json` contient :
 | TypeScript | `cd editor && npm test` |
 | Rust | `cd players/desktop && cargo test` |
 | Java | `cd players/android && python build.py` (lance aussi les tests) |
-| C++ | `cd players/cardputer && g++ -std=c++17 -I src -I .pio/libdeps/cardputer/ArduinoJson/src test/host_conformance.cpp -o conformance && ./conformance ../../spec/conformance` |
 
-Pour ajouter une règle au moteur : écrire d'abord un fichier de conformité, puis modifier les quatre moteurs jusqu'à ce que tous le passent.
+Pour ajouter une règle au moteur : écrire d'abord un fichier de conformité, puis modifier les trois moteurs jusqu'à ce que tous le passent.

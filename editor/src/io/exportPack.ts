@@ -11,24 +11,21 @@ import { compile } from '../model/compile';
 import { blockImage, hasAudio, soundDuration, soundSlots, type Project, type Sound } from '../model/project';
 
 export interface Platform {
-  id: 'windows' | 'rpi' | 'android' | 'android2' | 'cardputer';
+  id: 'windows' | 'rpi' | 'android' | 'android2';
   name: string;
   icon: string;
   desc: string;
   sampleRate: number;
-  /** 'pack' = fichier .aistory ; 'sd' = archive à décompresser à la racine de la carte microSD. */
-  output: 'pack' | 'sd';
   maxBytes?: number;
-  /** Taille des illustrations : `fit` = tenir dans le cadre, `cover` = remplir l'écran. */
-  image: { w: number; h: number; mode: 'fit' | 'cover' };
+  /** Taille maximale des illustrations. */
+  image: { w: number; h: number };
 }
 
 export const PLATFORMS: Platform[] = [
-  { id: 'windows', name: 'Windows', icon: '🪟', desc: t('Lecteur Herodio pour PC'), sampleRate: 44100, output: 'pack', image: { w: 1280, h: 960, mode: 'fit' } },
-  { id: 'android', name: 'Android', icon: '📱', desc: t('Téléphones et tablettes récents'), sampleRate: 44100, output: 'pack', image: { w: 1280, h: 960, mode: 'fit' } },
-  { id: 'rpi', name: 'Raspberry Pi', icon: '🍓', desc: t('Conteuse autonome'), sampleRate: 44100, output: 'pack', image: { w: 1024, h: 768, mode: 'fit' } },
-  { id: 'android2', name: 'Android 2.3', icon: '📟', desc: t('Anciens téléphones (Xperia Play…)'), sampleRate: 22050, output: 'pack', maxBytes: 150e6, image: { w: 640, h: 480, mode: 'fit' } },
-  { id: 'cardputer', name: 'Cardputer ADV', icon: '⌨️', desc: t('M5Stack, carte microSD'), sampleRate: 16000, output: 'sd', maxBytes: 2e9, image: { w: 240, h: 135, mode: 'cover' } },
+  { id: 'windows', name: 'Windows', icon: '🪟', desc: t('Lecteur Herodio pour PC'), sampleRate: 44100, image: { w: 1280, h: 960 } },
+  { id: 'android', name: 'Android', icon: '📱', desc: t('Téléphones et tablettes récents'), sampleRate: 44100, image: { w: 1280, h: 960 } },
+  { id: 'rpi', name: 'Raspberry Pi', icon: '🍓', desc: t('Conteuse autonome'), sampleRate: 44100, image: { w: 1024, h: 768 } },
+  { id: 'android2', name: 'Android 2.3', icon: '📟', desc: t('Anciens téléphones (Xperia Play…)'), sampleRate: 22050, maxBytes: 150e6, image: { w: 640, h: 480 } },
 ];
 
 export const PACK_FORMAT_VERSION = 1;
@@ -71,11 +68,6 @@ export function diagnose(p: Project, pf: Platform): string[] {
   const out: string[] = [];
   const est = estimate(p, pf);
   if (pf.maxBytes && est.bytes > pf.maxBytes) out.push(t('Le pack est très gros ({size}) pour {name} : raccourcis les sons ou retire des ambiances.', { size: mb(est.bytes), name: pf.name }));
-  if (pf.id === 'cardputer') {
-    if (p.blocks.length > 400) out.push(t('Plus de 400 blocs : le Cardputer risque de manquer de mémoire.'));
-    const longTitle = p.blocks.find((b) => 'title' in b && b.title.length > 40);
-    if (longTitle) out.push(t('Certains titres sont longs : ils seront coupés sur le petit écran du Cardputer.'));
-  }
   if (pf.id === 'android2' && est.seconds > 1800) out.push(t('Plus de 30 minutes de son : vérifie qu’il reste assez de place sur le vieux téléphone.'));
   return out;
 }
@@ -98,20 +90,18 @@ export async function buildPack(p: Project, pf: Platform, progress: (done: numbe
     credits: [...new Set([...(p.credits ?? []), ...(p.autoVoice ? [VOICES[p.lang ?? 'fr'].credit] : [])])],
     created: new Date().toISOString(), generator: 'Herodio Studio',
   };
-  const root = pf.output === 'sd' ? `herodio/${slug(p.title)}-${p.id.slice(0, 4)}/` : '';
   const files: Zippable = {
-    [root + 'story.json']: strToU8(JSON.stringify(story)),
-    [root + 'metadata.json']: strToU8(JSON.stringify(metadata, null, 1)),
+    'story.json': strToU8(JSON.stringify(story)),
+    'metadata.json': strToU8(JSON.stringify(metadata, null, 1)),
   };
   for (const [id, path] of images) {
-    files[root + path] = [await rasterize(getBlob(id)!, pf.image.w, pf.image.h, pf.image.mode), { level: 0 }];
+    files[path] = [await rasterize(getBlob(id)!, pf.image.w, pf.image.h), { level: 0 }];
   }
   for (let i = 0; i < unique.length; i++) {
     progress(i, unique.length);
     const data = await renderSound(unique[i].sound, pf.sampleRate);
-    if (data) files[root + unique[i].file] = [encodeWav(data, pf.sampleRate), { level: 0 }];
+    if (data) files[unique[i].file] = [encodeWav(data, pf.sampleRate), { level: 0 }];
   }
   progress(unique.length, unique.length);
-  const ext = pf.output === 'sd' ? t('-carte-sd.zip') : '.aistory';
-  return { name: slug(p.title) + (pf.id === 'android2' ? '-android23' : pf.id === 'cardputer' ? '-cardputer' : '') + ext, bytes: zipSync(files) };
+  return { name: slug(p.title) + (pf.id === 'android2' ? '-android23' : '') + '.aistory', bytes: zipSync(files) };
 }

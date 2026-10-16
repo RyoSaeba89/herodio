@@ -2,11 +2,11 @@
 
 *[Version française](README.md)*
 
-Herodio lets a child (roughly 7 to 14 years old), a teacher or a youth leader **create an interactive audio story without writing any code**. You link coloured blocks together, record your voice, add sound effects and background ambience, then play the story. Finally, you export it to a PC, a Raspberry Pi, an Android phone — recent or very old — or an M5Stack Cardputer.
+Herodio lets a child (roughly 7 to 14 years old), a teacher or a youth leader **create an interactive audio story without writing any code**. You link coloured blocks together, record your voice, add sound effects and background ambience, then play the story. Finally, you export it to a PC, a Raspberry Pi or an Android phone, recent or very old.
 
 Everything works **offline**, with no account and no subscription.
 
-> **Version 0.2.2-alpha**: a test version, in French and English. The Studio and the PC and Android players are tested; the Cardputer and a real Raspberry Pi have not been tried on the device yet; first tries on a real Xperia Play and a smartphone led to the Android fixes in 0.2.2, to be checked again on the device (see [Project status](#project-status)).
+> **Version 0.2.2-alpha**: a test version, in French and English. The Studio and the PC and Android players are tested; a real Raspberry Pi has not been tried on the device yet; first tries on a real Xperia Play and a smartphone led to the Android fixes in 0.2.2, to be checked again on the device (see [Project status](#project-status)).
 
 ## Preview
 
@@ -37,10 +37,8 @@ All the files are on the [Releases](https://github.com/RyoSaeba89/herodio/releas
 | `herodio-player-…-linux-x64.tar.gz` | Player for Linux PCs |
 | `herodio-player-…-raspberry-pi-arm64.tar.gz` | Player for Raspberry Pi 3, 4, 5 or Zero 2 (64-bit Raspberry Pi OS), with the autostart files |
 | `herodio-android-….apk` | Android player, from 2.3 (Xperia Play) to 14 |
-| `herodio-cardputer-….bin` | M5Stack Cardputer / ADV firmware, to flash at address 0x0 |
 | `stories-en-pc-android-raspberry-pi.zip` | The 8 stories in English, ready to play (PC, Raspberry Pi, recent Android) |
 | `stories-en-android23.zip` | The 8 English stories, lightened for Android 2.3 |
-| `stories-en-cardputer-sd-card.zip` | The 8 English stories for the Cardputer, to unzip at the root of the microSD card |
 | `histoires-….zip` | The same 8 stories in French, for the same devices |
 
 How to install each player is described in [docs/lecteurs.en.md](docs/lecteurs.en.md). `SHA256SUMS.txt` lets you check the downloads.
@@ -59,11 +57,11 @@ How to install each player is described in [docs/lecteurs.en.md](docs/lecteurs.e
   - voice, ambience and sound-effect tracks, with mute, solo and volume;
   - the ambience is lowered automatically when someone speaks (ducking).
 - **Sound and image library**: import WAV, MP3, OGG, FLAC or M4A, and PNG, JPEG, WebP or SVG; categories; preview; drag a sound or an image onto a block; unused media are flagged.
-- **Pictures**: every scene, question or ending can have its own picture. The story also has a cover and a colour. On export, images are converted to JPEG at the right size for each device (240 × 135 for the Cardputer).
+- **Pictures**: every scene, question or ending can have its own picture. The story also has a cover and a colour. On export, images are converted to JPEG at the right size for each device.
 - **Automatic voice** (off by default):
   - a **free, offline** synthetic voice reads aloud the texts that have no recording yet: scenes, questions and answers;
   - it is based on [Piper](https://github.com/rhasspy/piper): the "Siwis" voice for stories in French, "LJ Speech" for stories in English ("Story language" setting);
-  - it works in the preview and is built into the sounds on export: **all** players benefit, even Android 2.3 and the Cardputer;
+  - it works in the preview and is built into the sounds on export: **all** players benefit, even Android 2.3;
   - a block's 🗣️ button turns it into a real take that you can edit in the studio.
 - **"Play my story"** with the same engine as the players:
   - the current block is highlighted, and so is the path taken;
@@ -92,7 +90,6 @@ This table separates what is written, built and tested:
 | Windows player (Rust) | ✅ | ✅ | ✅ conformance, full automated play-through, window rendering checked by screenshot; ⚠️ sound and keyboard not tried by hand |
 | Linux / Raspberry Pi player (Rust) | ✅ | ✅ x86_64 Linux (WSL) and aarch64 (cross-compiled) | ✅ tests on Linux x86_64 and under aarch64 emulation (qemu), console mode played on the 8 exported stories; **to be checked on a real Raspberry Pi** |
 | Android 2.3 → 14 player (Java) | ✅ | ✅ APK signed v1+v2, built against API 9 | ✅ Android 2.3.7, 5.1 and 14 emulators (import, WAV playback, pictures, D-pad, keyboard, touch, complete stories, confetti, rotation, listen again); first tries on a real Xperia Play and a smartphone, **0.2.2 fixes to be checked again on the device** |
-| Cardputer / ADV firmware (C++) | ✅ | ✅ PlatformIO (ESP32-S3) | ✅ engine conformance and translations on PC; **to be checked on the device** (screen, JPEG pictures, keyboard, sound, SD card) |
 | Automatic voice (Piper: Siwis and LJ Speech, in the editor) | ✅ | ✅ | ✅ synthesis, cache, preview, takes and export tested in Edge; 8 s of speech computed in about 2 s; English narration of the stories generated with LJ Speech |
 
 ## Architecture
@@ -108,16 +105,15 @@ editor/            Herodio Studio — React + TypeScript + React Flow + Web Audi
 players/
   desktop/         Rust player (egui + rodio): Windows, Linux, Raspberry Pi (+ console mode)
   android/         dependency-free Java player, from API 9 to 34, built without Gradle (build.py)
-  cardputer/       PlatformIO / Arduino firmware for the M5Stack Cardputer and Cardputer ADV
 spec/
   story.schema.json   schema of the executable format
-  conformance/        tests shared by the 4 engines
+  conformance/        tests shared by the 3 engines
 docs/              formats, engine, installing the players
 tools/             generation of sound effects and music (gen_sons.py) and of pictures (illustrations/)
 editor/scripts/    voice installation (setup-tts.mjs) and narration of the included stories (gen-narration.mjs)
 ```
 
-**Key principle**: the platform shares the **data format** and the **engine rules**, not the code. Each player is native to its device: Java 6 for Android 2.3, C++ for the ESP32, Rust for the PC. The same conformance tests guarantee that, given the same state, a story makes the same decisions everywhere. See [docs/moteur.en.md](docs/moteur.en.md).
+**Key principle**: the platform shares the **data format** and the **engine rules**, not the code. Each player is native to its device: Java 6 for Android 2.3, Rust for the PC. The same conformance tests guarantee that, given the same state, a story makes the same decisions everywhere. See [docs/moteur.en.md](docs/moteur.en.md).
 
 Audio is **premixed on export**: one mono WAV file per moment of the story, at the sample rate suited to the device. The mixing used for export is the same as the one used for the preview. See [docs/format.en.md](docs/format.en.md).
 
@@ -153,7 +149,7 @@ npx tauri build        # exe + installer in src-tauri/target/release/
 
 End-to-end tests (Edge, no visible window): start `npm run dev`, then `node e2e-smoke.mjs <folder>`, `e2e-logic.mjs`, `e2e-studio.mjs`, `e2e-export.mjs`, `e2e-lang.mjs` and `e2e-title.mjs`. `HERODIO_LANG=en` runs them with the interface in English.
 
-Translations: the code is written in French and `t('…')` returns the English translation (`editor/src/i18n.en.ts`); a test checks that no text is forgotten. The players do the same (`players/desktop/src/i18n.rs`, `players/android/common/org/herodio/core/I18n.java`, `players/cardputer/src/i18n.h`). The English stories are in `editor/src/stories/*.en.ts`.
+Translations: the code is written in French and `t('…')` returns the English translation (`editor/src/i18n.en.ts`); a test checks that no text is forgotten. The players do the same (`players/desktop/src/i18n.rs`, `players/android/common/org/herodio/core/I18n.java`). The English stories are in `editor/src/stories/*.en.ts`.
 
 ## Licences
 

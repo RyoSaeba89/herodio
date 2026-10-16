@@ -23,7 +23,6 @@ espeak-ng est un composant séparé, chargé à part (`editor/public/tts/vendor/
 
 - **PC / Raspberry Pi (Rust)** : eframe/egui, rodio, image, zip, serde, crossterm et leurs dépendances, sous licences MIT et/ou Apache-2.0. La liste complète est dans `players/desktop/Cargo.lock`.
 - **Android** : aucune dépendance (Java et API Android seuls).
-- **Cardputer** : M5Unified, M5GFX et M5Cardputer (MIT), ArduinoJson (MIT), framework Arduino-ESP32 (LGPL-2.1, avec des parties sous Apache-2.0). Le code source complet du firmware est dans `players/cardputer/`, ce qui permet de le recompiler et de le relier.
 
 ## Histoires fournies
 

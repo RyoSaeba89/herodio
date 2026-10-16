@@ -4,7 +4,7 @@
 
 In Herodio Studio, click **📦 Export my story** and choose the device. Every player reads the same format, described in [format.en.md](format.en.md).
 
-**Language**: on first launch, every player asks for the interface language, French or English. You can change it later with the 🌐 button in the library (PC), the "English" / "Français" button (Android), the `L` key (console mode) or the `l` key (Cardputer). A story keeps its own language: the English versions of the 8 included stories are in the `stories-en-….zip` files of the release.
+**Language**: on first launch, every player asks for the interface language, French or English. You can change it later with the 🌐 button in the library (PC), the "English" / "Français" button (Android) or the `L` key (console mode). A story keeps its own language: the English versions of the 8 included stories are in the `stories-en-….zip` files of the release.
 
 ## Windows
 
@@ -107,32 +107,3 @@ You need to allow installing apps from unknown sources ("Unknown sources" in the
 Building: `cd players/android && python build.py`. You need a JDK and the Android SDK (`platforms;android-9`, `platforms;android-34` and build-tools 30 or later); Gradle is not needed. The code is compiled against API 9, which guarantees at build time that no newer API is used.
 
 By default, the APK is signed with a test key created on the spot (`herodio-debug.keystore`, never published). To sign a published version, set `HERODIO_KEYSTORE` (path to the key, alias `herodio`) and `HERODIO_KEYSTORE_PASS` before `python build.py`. Every version of the same app must be signed with the same key, otherwise Android refuses the update.
-
-## M5Stack Cardputer / Cardputer ADV
-
-1. Export for **Cardputer ADV**, then unzip the archive at the **root** of the microSD card (FAT32). A `herodio/` folder appears, with one sub-folder per story.
-2. Install the firmware (only once). The easiest way: flash the `herodio-cardputer-….bin` image from the [release](https://github.com/RyoSaeba89/herodio/releases) at address **0x0**, from Chrome or Edge with [ESP Web Flasher](https://espressif.github.io/esptool-js/), or with `esptool.py --chip esp32s3 write_flash 0x0 herodio-cardputer-0.2.1-alpha.bin`. Or build it from source:
-
-   ```sh
-   pip install platformio
-   cd players/cardputer
-   pio run -t upload      # Cardputer plugged in over USB-C
-   ```
-
-   If the upload does not start, hold the **G0** button while plugging in the cable.
-3. Insert the card and switch on. On first launch, choose the language (`1` French, `2` English, or `;` `.` then `OK`); it is kept in the Cardputer's memory. The library shows each story's cover; change story with `;` `.` and listen to it with `OK`.
-
-| Key | Action |
-|---|---|
-| `;` `.` (up / down arrows) | choose (the answer is read) |
-| `OK` (Enter) or the G0 button | confirm |
-| `1`–`9` | pick an answer directly |
-| `Del` | back to the library |
-| `e` | listen to the current moment again |
-| `r` | start again |
-| `i` | show the bag |
-| `t` | switch between the picture and the text |
-| `-` `=` | volume |
-| `l` | change language (in the library) |
-
-The sound comes out of the speaker, or the headphone jack on the ADV.

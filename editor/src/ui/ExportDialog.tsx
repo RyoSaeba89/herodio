@@ -11,7 +11,6 @@ const HOWTO: Record<Platform['id'], string> = {
   rpi: t('Copie le fichier .aistory dans le dossier « histoires » du Raspberry Pi, puis lance le lecteur Herodio.'),
   android: t('Copie le fichier .aistory sur le téléphone, puis ouvre-le depuis l’application Herodio (bouton « Ajouter une histoire »).'),
   android2: t('Copie le fichier .aistory dans le dossier « Herodio » de la carte SD du téléphone, puis lance l’application.'),
-  cardputer: t('Décompresse l’archive à la racine de la carte microSD (un dossier « herodio » apparaît), puis insère la carte dans le Cardputer.'),
 };
 
 export function ExportDialog({ issues, onClose }: { issues: Issue[]; onClose: () => void }) {
@@ -29,7 +28,7 @@ export function ExportDialog({ issues, onClose }: { issues: Issue[]; onClose: ()
     setError(''); setDone(''); setBusy(0);
     try {
       const pack = await buildPack(project, pf, (d, total, st) => { setStep(st === 'voix' ? t('La voix lit ton histoire') : t('Mixage des sons')); setBusy(total ? d / total : 1); });
-      const saved = await saveBytes(pack.name, pack.bytes, pf.output === 'sd' ? { name: t('Archive ZIP'), extensions: ['zip'] } : { name: t('Pack Herodio'), extensions: ['aistory'] });
+      const saved = await saveBytes(pack.name, pack.bytes, { name: t('Pack Herodio'), extensions: ['aistory'] });
       if (saved) setDone(t('✔ Pack créé ({size}) : {file}', { size: mb(pack.bytes.length), file: saved }));
     } catch (e) {
       setError(t('L’export a échoué : {msg}', { msg: (e as Error).message }));

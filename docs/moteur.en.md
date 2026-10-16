@@ -9,7 +9,6 @@ A story is created once and must play **in exactly the same way** on every devic
 | TypeScript (reference) | `editor/src/engine/engine.ts` | the editor's preview |
 | Rust | `players/desktop/src/engine.rs` | Windows, Linux and Raspberry Pi players |
 | Java (API 9 compatible) | `players/android/common/org/herodio/core/Engine.java` | Android 2.3 → 14 player |
-| C++ | `players/cardputer/src/engine.h` | Cardputer firmware |
 
 ## Game state
 
@@ -62,6 +61,5 @@ Each `spec/conformance/*.json` file contains:
 | TypeScript | `cd editor && npm test` |
 | Rust | `cd players/desktop && cargo test` |
 | Java | `cd players/android && python build.py` (also runs the tests) |
-| C++ | `cd players/cardputer && g++ -std=c++17 -I src -I .pio/libdeps/cardputer/ArduinoJson/src test/host_conformance.cpp -o conformance && ./conformance ../../spec/conformance` |
 
-To add a rule to the engine: first write a conformance file, then change the four engines until they all pass it.
+To add a rule to the engine: first write a conformance file, then change the three engines until they all pass it.

@@ -14,7 +14,7 @@ await page.reload();
 await page.getByText(example).click();
 await page.waitForTimeout(1500);
 await page.getByText('📦 Exporter mon histoire').click();
-for (const pf of ['Windows', 'Android 2.3', 'Cardputer ADV']) {
+for (const pf of ['Windows', 'Android 2.3']) {
   await page.locator('.platform', { hasText: pf }).first().click();
   if (pf === 'Windows') await page.screenshot({ path: `${out}/6-export.png` });
   const dl = page.waitForEvent('download');

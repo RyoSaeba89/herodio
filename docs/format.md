@@ -8,7 +8,6 @@ Herodio sépare clairement trois choses :
 |---|---|---|---|
 | Projet éditable | `mon-histoire.herodio` | `project.json` + sons d'origine (`media/`) | l'éditeur |
 | Pack de lecture | `mon-histoire.aistory` | `story.json` + `metadata.json` + sons prémixés (`assets/audio/`) | les lecteurs |
-| Carte SD Cardputer | `…-carte-sd.zip` (`…-sd-card.zip` en anglais) | le même pack, déjà décompressé dans `herodio/<histoire>/` | le Cardputer |
 
 Les deux fichiers sont des archives ZIP ordinaires : on peut les ouvrir avec n'importe quel outil d'archive.
 
@@ -55,7 +54,6 @@ assets/images/001.jpg   illustrations et couverture : JPEG de base (non progress
   |---|---|
   | Windows, Android, Raspberry Pi | 44,1 kHz |
   | Android 2.3 | 22,05 kHz |
-  | Cardputer | 16 kHz |
 
 - Champs facultatifs, ignorés par un lecteur qui ne les connaît pas (le format reste en version 1) :
   - `image` sur les scènes, les choix et les fins ;
@@ -67,7 +65,6 @@ assets/images/001.jpg   illustrations et couverture : JPEG de base (non progress
   | Windows et Android | 1280 × 960 au plus |
   | Raspberry Pi | 1024 × 768 |
   | Android 2.3 | 640 × 480 |
-  | Cardputer | exactement 240 × 135 (recadrée) |
 
 - Les identifiants de blocs de `story.json` sont ceux de l'éditeur. Les traces de jeu se comparent donc d'une plateforme à l'autre.
 - Deux emplacements qui ont exactement le même mixage partagent le même fichier.
@@ -76,8 +73,8 @@ assets/images/001.jpg   illustrations et couverture : JPEG de base (non progress
 
 ### Pourquoi du WAV prémixé ?
 
-- Tous les appareils visés savent le lire, y compris le Stagefright d'Android 2.3 et l'ESP32-S3, sans décodeur.
-- Un seul flux à la fois : le Cardputer ne peut pas mixer plusieurs flux compressés.
+- Tous les appareils visés savent le lire, y compris le Stagefright d'Android 2.3, sans décodeur.
+- Un seul flux à la fois : les vieux appareils n'ont pas à mixer plusieurs flux.
 - Ce que l'enfant entend dans la prévisualisation correspond exactement au pack, car le même code de mixage (`editor/src/audio/mixer.ts`) sert aux deux.
 
 En contrepartie, les fichiers sont plus gros. L'éditeur affiche une estimation de la taille avant l'export.

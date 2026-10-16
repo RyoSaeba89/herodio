@@ -3,7 +3,7 @@
 import { chromium } from 'playwright-core';
 import { mkdirSync } from 'node:fs';
 const out = process.argv[2] ?? '.';
-const platforms = process.argv.slice(3).length ? process.argv.slice(3) : ['Windows', 'Android 2.3', 'Cardputer ADV'];
+const platforms = process.argv.slice(3).length ? process.argv.slice(3) : ['Windows', 'Android 2.3'];
 const L = process.env.HERODIO_LANG === 'en'
   ? { more: 'New story or example', exp: '📦 Export my story' }
   : { more: 'Nouvelle histoire ou exemple', exp: '📦 Exporter mon histoire' };

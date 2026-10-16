@@ -42,26 +42,19 @@ export async function addImage(blob: Blob, name: string): Promise<Media> {
 }
 
 /**
- * Convertit une image en JPEG de base (lisible partout, y compris par le décodeur de l'ESP32).
- * `fit` : l'image tient dans w×h ; `cover` : elle remplit exactement w×h (recadrée au centre).
+ * Convertit une image en JPEG de base (lisible partout), qui tient dans w×h.
  */
-export async function rasterize(blob: Blob, w: number, h: number, mode: 'fit' | 'cover', quality = 0.85): Promise<Uint8Array> {
+export async function rasterize(blob: Blob, w: number, h: number, quality = 0.85): Promise<Uint8Array> {
   const img = await loadImage(blob);
   const iw = img.naturalWidth || w, ih = img.naturalHeight || h;
-  let cw = w, ch = h, sx = 0, sy = 0, sw = iw, sh = ih;
-  if (mode === 'fit') {
-    const k = Math.min(1, w / iw, h / ih);
-    cw = Math.round(iw * k); ch = Math.round(ih * k);
-  } else {
-    const k = Math.max(w / iw, h / ih);
-    sw = w / k; sh = h / k; sx = (iw - sw) / 2; sy = (ih - sh) / 2;
-  }
+  const k = Math.min(1, w / iw, h / ih);
+  const cw = Math.round(iw * k), ch = Math.round(ih * k);
   const canvas = document.createElement('canvas');
   canvas.width = cw; canvas.height = ch;
   const g = canvas.getContext('2d')!;
   g.fillStyle = '#ffffff'; // pas de transparence en JPEG
   g.fillRect(0, 0, cw, ch);
-  g.drawImage(img, sx, sy, sw, sh, 0, 0, cw, ch);
+  g.drawImage(img, 0, 0, iw, ih, 0, 0, cw, ch);
   const out = await new Promise<Blob>((res, rej) => canvas.toBlob((b) => (b ? res(b) : rej(new Error(t('Conversion impossible')))), 'image/jpeg', quality));
   return new Uint8Array(await out.arrayBuffer());
 }
