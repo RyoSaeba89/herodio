@@ -20,6 +20,7 @@ export function PlayPanel() {
   const token = useRef(0);
   // La souris reste où l'on a cliqué : la réponse qui apparaît dessous ne doit pas couper la lecture de la page.
   const hoverBlocked = useRef(false);
+  const [hovered, setHovered] = useState<number | null>(null);
   const [, force] = useReducer((x: number) => x + 1, 0);
   const [preparing, setPreparing] = useState(false);
   const advanced = project.level === 'avance';
@@ -29,6 +30,7 @@ export function PlayPanel() {
     if (!e) return;
     const t = ++token.current;
     hoverBlocked.current = true;
+    setHovered(null);
     const n = e.node;
     useStore.getState().setPlaying(n?.id ?? null, [...e.path]);
     force();
@@ -65,6 +67,15 @@ export function PlayPanel() {
 
   const next = () => { stop(); e?.next(); present(); };
   const choose = (i: number) => { stop(); e?.choose(i); present(); };
+
+  // On n'entend une réponse qu'en s'y arrêtant, jamais pendant la question : traverser les réponses ne coupe rien.
+  const questionPlaying = playingKey === 'play' || preparing;
+  useEffect(() => {
+    const o = hovered !== null && !questionPlaying && n?.type === 'choice' ? n.options[hovered] : undefined;
+    if (!o) return;
+    const id = setTimeout(() => hearOption(o), 700);
+    return () => clearTimeout(id);
+  }, [hovered, questionPlaying]);
 
   useEffect(() => {
     if (!play) return;
@@ -103,7 +114,8 @@ export function PlayPanel() {
         <div className="play-actions">
           {n?.type === 'choice' && n.options.map((o, i) => (
             <button key={i} className="btn choice-btn" onClick={() => choose(i)}
-              onMouseEnter={() => { if (!hoverBlocked.current) hearOption(o); }} onFocus={() => hearOption(o)}>
+              onMouseEnter={() => { if (hoverBlocked.current) hoverBlocked.current = false; else setHovered(i); }}
+              onMouseLeave={() => setHovered(null)} onFocus={() => hearOption(o)}>
               <span className="option-num">{i + 1}</span> {o.text}
             </button>
           ))}

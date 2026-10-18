@@ -110,6 +110,11 @@ impl Session {
         self.play_option(audio);
     }
 
+    /// La lecture enchaînée (texte puis réponses) est en cours : le survol à la souris ne doit pas la couper.
+    pub fn auto_reading(&self) -> bool {
+        self.chain && self.reading.is_some()
+    }
+
     pub fn play_option(&mut self, audio: &mut Audio) {
         self.chain = false;
         self.play_item(self.selected + 1, audio);
@@ -225,6 +230,7 @@ mod tests {
         assert_eq!((s.reading, s.selected), (Some(0), 0)); // la question
         wait(&mut s, &mut a);
         assert_eq!((s.reading, s.selected), (Some(1), 0)); // « La porte »
+        assert!(s.auto_reading()); // le survol à la souris attend
         wait(&mut s, &mut a);
         assert_eq!((s.reading, s.selected), (Some(2), 1)); // « La forêt »
         wait(&mut s, &mut a);
@@ -242,6 +248,7 @@ mod tests {
         s.confirm(&mut a);
         s.select(1, &mut a); // l'enfant choisit lui-même : la lecture enchaînée s'arrête
         assert_eq!(s.reading, Some(2));
+        assert!(!s.auto_reading());
         wait(&mut s, &mut a);
         assert_eq!(s.reading, None);
     }

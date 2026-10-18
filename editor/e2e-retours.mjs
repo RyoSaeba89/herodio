@@ -2,7 +2,13 @@
 import { chromium } from 'playwright-core';
 const browser = await chromium.launch({ channel: 'msedge', args: ['--autoplay-policy=no-user-gesture-required'] });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-await page.addInitScript(() => localStorage.setItem('herodio-lang', 'fr'));
+await page.addInitScript(() => {
+  localStorage.setItem('herodio-lang', 'fr');
+  // Compte les sons démarrés, pour savoir si le survol d'une réponse l'a fait entendre.
+  window.__starts = 0;
+  const start = AudioBufferSourceNode.prototype.start;
+  AudioBufferSourceNode.prototype.start = function (...a) { window.__starts++; return start.apply(this, a); };
+});
 await page.goto('http://localhost:1420');
 await page.getByText('Le château mystérieux').click();
 await page.waitForTimeout(800);
@@ -37,11 +43,26 @@ await page.mouse.move(b.x + 12, b.y + b.height / 2);
 await page.waitForTimeout(200);
 const under = await page.evaluate(([x, y]) => !!document.elementFromPoint(x, y)?.closest('.choice-btn'), [b.x + 12, b.y + b.height / 2]);
 check(under && await page.locator('.play-card.speaking').count() === 1, 'la question est toujours lue, curseur sur une réponse');
-const o = await page.locator('.choice-btn').nth(0).boundingBox();
-await page.mouse.move(o.x + 20, o.y - 30, { steps: 3 });
-await page.mouse.move(o.x + 20, o.y + 10, { steps: 3 });
-await page.waitForTimeout(400);
-check(await page.locator('.play-card.speaking').count() === 0, 'survoler ensuite une réponse la fait entendre');
+// 4. Traverser les réponses pendant la question ne la coupe pas ; s'arrêter sur une réponse, ensuite, la fait entendre.
+const btns = page.locator('.choice-btn');
+const last = await btns.nth(2).boundingBox();
+const o = await btns.nth(0).boundingBox();
+const crossing = await page.evaluate(() => window.__starts);
+// Petits pas, comme une vraie souris : elle passe aussi dans les espaces entre les réponses.
+await page.mouse.move(last.x + 20, last.y + 10, { steps: 40 });
+await page.mouse.move(o.x + 20, o.y + 10, { steps: 40 });
+await page.waitForTimeout(500);
+check(await page.evaluate(() => window.__starts) === crossing && await page.locator('.play-card.speaking').count() === 1, 'traverser les réponses ne coupe pas la question');
+await page.waitForFunction(() => !document.querySelector('.play-card.speaking'), null, { timeout: 30000 });
+const before = await page.evaluate(() => window.__starts);
+await page.waitForTimeout(1200);
+check(await page.evaluate(() => window.__starts) > before, 'après la question, rester sur une réponse la fait entendre');
+await page.mouse.move(o.x + 20, o.y + 60, { steps: 2 });
+await page.mouse.move(o.x + 20, o.y + 10, { steps: 2 });
+const quick = await page.evaluate(() => window.__starts);
+await page.mouse.move(last.x + 20, last.y + 10, { steps: 4 });
+await page.waitForTimeout(300);
+check(await page.evaluate(() => window.__starts) === quick, 'passer vite sur une réponse ne la fait pas entendre');
 
 await browser.close();
 process.exit(fails.length ? 1 : 0);

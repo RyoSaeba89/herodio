@@ -17,6 +17,8 @@ use std::time::{Duration, Instant};
 const INK: Color32 = Color32::from_rgb(38, 35, 58);
 const MUTED: Color32 = Color32::from_rgb(110, 106, 133);
 const DEFAULT_COLOR: Color32 = Color32::from_rgb(91, 91, 214);
+/// Temps d'arrêt de la souris sur une réponse avant de la lire.
+const HOVER_DWELL: Duration = Duration::from_millis(700);
 /// Couleurs des réponses (orange, sarcelle, rose, violet, bleu, vert…).
 const CHOICE_COLORS: [Color32; 6] = [
     Color32::from_rgb(242, 138, 28),
@@ -140,8 +142,8 @@ pub struct App {
     textures: HashMap<(PathBuf, String), Option<TextureHandle>>,
     node_token: String,
     node_since: Instant,
-    /// Réponse sous la souris quand la page est apparue : on ne la lit pas tant que la souris ne l'a pas quittée.
-    hover_block: Option<usize>,
+    /// Réponse survolée, depuis quand, et si elle a déjà été lue (ou était sous la souris à l'arrivée de la page).
+    hover: Option<(usize, Instant, bool)>,
     started: Instant,
     /// Premier démarrage : on demande la langue avant tout (0 = français, 1 = anglais surligné).
     ask_lang: Option<usize>,
@@ -162,7 +164,7 @@ impl App {
         let lib_dir = pack::library_dir();
         let mut app = App {
             library: pack::scan(&lib_dir), lib_dir, lib_sel: 0, session: None, audio: Audio::new(), message: String::new(), fullscreen,
-            textures: HashMap::new(), node_token: String::new(), node_since: Instant::now(), hover_block: None, started: Instant::now(),
+            textures: HashMap::new(), node_token: String::new(), node_since: Instant::now(), hover: None, started: Instant::now(),
             ask_lang: (!lang_chosen).then_some(0),
         };
         if !app.audio.available() { app.message = tr("Aucune sortie audio trouvée : les histoires seront muettes.").into(); }
@@ -424,8 +426,9 @@ impl App {
         // Paysage : illustration à gauche, texte et réponses à droite ; sinon l'une sous l'autre.
         let avail = ui.available_size();
         let wide = avail.x > avail.y * 1.15;
-        let (moved, pointer) = ctx.input(|i| (i.pointer.is_moving(), i.pointer.hover_pos()));
-        let mut hover_block = if fresh { None } else { self.hover_block };
+        let pointer = ctx.input(|i| i.pointer.hover_pos());
+        let auto_reading = s.auto_reading();
+        let mut hover = if fresh { None } else { self.hover };
         let fade = (age / 0.35).min(1.0);
         let audio_busy = self.audio.busy();
         let mut act: Option<Action> = None;
@@ -468,10 +471,17 @@ impl App {
                     p.text(pos2(r.left() + 40.0, r.center().y), Align2::CENTER_CENTER, (i + 1).to_string(), FontId::proportional(28.0), c);
                     let gy = r.center().y - g.size().y / 2.0;
                     p.galley(pos2(r.left() + 80.0, gy), g, Color32::WHITE);
-                    let under = pointer.is_some_and(|p| rect.contains(p));
-                    if fresh && under { hover_block = Some(i); }
-                    if hover_block == Some(i) && !under { hover_block = None; }
-                    if resp.hovered() && moved && i != selected && hover_block != Some(i) { act = Some(Box::new(move |s, a| { s.selected = i; s.play_option(a); })); }
+                    // On n'entend une réponse qu'en s'y arrêtant, jamais pendant la lecture enchaînée : traverser les réponses ne coupe rien.
+                    if pointer.is_some_and(|p| rect.contains(p)) {
+                        let (since, mut heard) = match hover { Some((k, t, h)) if k == i => (t, h), _ => (Instant::now(), fresh) };
+                        if !heard && !auto_reading && since.elapsed() >= HOVER_DWELL {
+                            heard = true;
+                            act = Some(Box::new(move |s, a| { s.selected = i; s.play_option(a); }));
+                        }
+                        hover = Some((i, since, heard));
+                    } else if hover.is_some_and(|h| h.0 == i) {
+                        hover = None;
+                    }
                     if resp.clicked() { act = Some(Box::new(move |s, a| s.choose(i, a))); }
                     ui.add_space(6.0);
                 }
@@ -514,7 +524,7 @@ impl App {
             ui.label(RichText::new(tr("Flèches : choisir · Entrée : valider · 1-9 : réponse directe · E : réécouter · R : recommencer · Échap : retour · F11 : plein écran")).small().color(MUTED));
         });
 
-        self.hover_block = hover_block;
+        self.hover = hover;
         if let Some(k) = &end {
             if k != "sad" { paint_celebration(ui, ui.max_rect(), age, k == "secret"); }
         }
