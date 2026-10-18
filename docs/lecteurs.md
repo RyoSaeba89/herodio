@@ -11,7 +11,7 @@ Dans Herodio Studio, **📦 Exporter mon histoire** puis choisir l'appareil. Cha
 - **Version portable** : `herodio-player.exe` accompagné d'un dossier `histoires` placé à côté. Copier les `.aistory` dans ce dossier ; rien n'est installé sur le PC.
 - Sans dossier `histoires` à côté du programme, la bibliothèque est `%USERPROFILE%\Herodio\histoires`.
 - La langue choisie est gardée dans `langue.txt`, dans le dossier de la bibliothèque.
-- À chaque étape, le texte puis chaque réponse sont lus à la suite, et ce qui est lu est surligné ; dès qu'on choisit soi-même une réponse, la lecture enchaînée s'arrête. La fenêtre s'adapte à sa taille (tout s'agrandit ou rétrécit avec elle).
+- À chaque étape, le texte puis chaque réponse sont lus à la suite, et ce qui est lu est surligné ; dès qu'on choisit soi-même une réponse, la lecture enchaînée s'arrête. Le lecteur ne tourne jamais la page tout seul : on appuie sur « Suivant ». La fenêtre s'adapte à sa taille (tout s'agrandit ou rétrécit avec elle).
 - On peut aussi **glisser un `.aistory` dans la fenêtre** (il est copié dans la bibliothèque) ou le passer en argument (`herodio-player.exe histoire.aistory`, ou « Ouvrir avec… »).
 
 | Touche | Action |

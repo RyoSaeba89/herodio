@@ -80,16 +80,12 @@ impl Session {
         self.selected = 0; // tout est lu : la surbrillance revient sur le choix 1
     }
 
-    /// À appeler régulièrement : quand un son se termine, lit la suite ou enchaîne la scène suivante.
+    /// À appeler régulièrement : quand un son se termine, lit la réponse suivante. On ne change jamais de page tout seul.
     pub fn tick(&mut self, audio: &mut Audio) {
         let Some(k) = self.reading else { return };
         if audio.busy() { return; }
         self.reading = None;
-        if matches!(self.engine.current(), Some(Node::Scene { .. })) {
-            self.next(audio);
-        } else if self.chain {
-            self.read_from(k + 1, audio);
-        }
+        if self.chain { self.read_from(k + 1, audio); }
     }
 
     pub fn next(&mut self, audio: &mut Audio) {
@@ -248,6 +244,21 @@ mod tests {
         assert_eq!(s.reading, Some(2));
         wait(&mut s, &mut a);
         assert_eq!(s.reading, None);
+    }
+
+    #[test]
+    fn ne_tourne_pas_la_page_tout_seul() {
+        let p = castle_pack("page");
+        let mut story: serde_json::Value = serde_json::from_slice(&p.read("story.json").unwrap()).unwrap();
+        story["nodes"][0]["audio"] = "s.wav".into();
+        std::fs::write(p.path.join("story.json"), story.to_string()).unwrap();
+        std::fs::write(p.path.join("s.wav"), wav()).unwrap();
+        let mut a = Audio::muted();
+        let mut s = Session::new(Pack::open(&p.path).unwrap(), &mut a);
+        assert_eq!(s.reading, Some(0));
+        std::thread::sleep(std::time::Duration::from_millis(40));
+        s.tick(&mut a);
+        assert_eq!((s.reading, s.engine.token().as_str()), (None, "s1")); // le son est fini, la scène attend « Suivant »
     }
 
     #[test]

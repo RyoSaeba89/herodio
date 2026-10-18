@@ -275,7 +275,7 @@ export function Studio({ slotKey }: { slotKey: string }) {
                       </div>
                     );
                   })}
-                  {sel && tr.clips.some((c) => c.id === sel.clip) && <div className="selection" style={{ left: sel.from * pps, width: (sel.to - sel.from) * pps }} />}
+                  {sel && tr.clips.some((c) => c.id === sel.clip) && <div className="clip-selection" style={{ left: sel.from * pps, width: (sel.to - sel.from) * pps }} />}
                 </div>
               ))}
               <div className="cursor" style={{ left: cursor * pps }} />

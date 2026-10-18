@@ -16,6 +16,7 @@ Herodio's code is under the MIT licence ([LICENSE](LICENSE)). The published prog
 | React, React Flow (@xyflow/react), zustand, immer, fflate, idb-keyval | MIT | npm |
 | Nunito font (@fontsource-variable/nunito) | SIL OFL 1.1 | https://github.com/googlefonts/nunito |
 | Tauri 2 | MIT / Apache-2.0 | https://github.com/tauri-apps/tauri |
+| Microsoft Edge WebView2 Runtime (offline installer, in `…-windows-setup.exe` only; run only when missing) | Microsoft licence, redistribution intended by Microsoft | https://developer.microsoft.com/microsoft-edge/webview2 |
 
 espeak-ng is a separate component, loaded on its own (`editor/public/tts/vendor/`). Its corresponding source code is available at the addresses above. `editor/scripts/setup-tts.mjs` rebuilds these files from npm.
 

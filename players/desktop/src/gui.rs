@@ -140,6 +140,8 @@ pub struct App {
     textures: HashMap<(PathBuf, String), Option<TextureHandle>>,
     node_token: String,
     node_since: Instant,
+    /// Réponse sous la souris quand la page est apparue : on ne la lit pas tant que la souris ne l'a pas quittée.
+    hover_block: Option<usize>,
     started: Instant,
     /// Premier démarrage : on demande la langue avant tout (0 = français, 1 = anglais surligné).
     ask_lang: Option<usize>,
@@ -160,7 +162,7 @@ impl App {
         let lib_dir = pack::library_dir();
         let mut app = App {
             library: pack::scan(&lib_dir), lib_dir, lib_sel: 0, session: None, audio: Audio::new(), message: String::new(), fullscreen,
-            textures: HashMap::new(), node_token: String::new(), node_since: Instant::now(), started: Instant::now(),
+            textures: HashMap::new(), node_token: String::new(), node_since: Instant::now(), hover_block: None, started: Instant::now(),
             ask_lang: (!lang_chosen).then_some(0),
         };
         if !app.audio.available() { app.message = tr("Aucune sortie audio trouvée : les histoires seront muettes.").into(); }
@@ -368,7 +370,8 @@ impl App {
 
         // Fondu à chaque nouveau moment de l'histoire
         let token = s.engine.token();
-        if token != self.node_token { self.node_token = token; self.node_since = Instant::now(); }
+        let fresh = token != self.node_token;
+        if fresh { self.node_token = token; self.node_since = Instant::now(); }
         let age = self.node_since.elapsed().as_secs_f32();
 
         let mut back = false;
@@ -421,7 +424,8 @@ impl App {
         // Paysage : illustration à gauche, texte et réponses à droite ; sinon l'une sous l'autre.
         let avail = ui.available_size();
         let wide = avail.x > avail.y * 1.15;
-        let moved = ctx.input(|i| i.pointer.is_moving());
+        let (moved, pointer) = ctx.input(|i| (i.pointer.is_moving(), i.pointer.hover_pos()));
+        let mut hover_block = if fresh { None } else { self.hover_block };
         let fade = (age / 0.35).min(1.0);
         let audio_busy = self.audio.busy();
         let mut act: Option<Action> = None;
@@ -464,7 +468,10 @@ impl App {
                     p.text(pos2(r.left() + 40.0, r.center().y), Align2::CENTER_CENTER, (i + 1).to_string(), FontId::proportional(28.0), c);
                     let gy = r.center().y - g.size().y / 2.0;
                     p.galley(pos2(r.left() + 80.0, gy), g, Color32::WHITE);
-                    if resp.hovered() && moved && i != selected { act = Some(Box::new(move |s, a| { s.selected = i; s.play_option(a); })); }
+                    let under = pointer.is_some_and(|p| rect.contains(p));
+                    if fresh && under { hover_block = Some(i); }
+                    if hover_block == Some(i) && !under { hover_block = None; }
+                    if resp.hovered() && moved && i != selected && hover_block != Some(i) { act = Some(Box::new(move |s, a| { s.selected = i; s.play_option(a); })); }
                     if resp.clicked() { act = Some(Box::new(move |s, a| s.choose(i, a))); }
                     ui.add_space(6.0);
                 }
@@ -507,6 +514,7 @@ impl App {
             ui.label(RichText::new(tr("Flèches : choisir · Entrée : valider · 1-9 : réponse directe · E : réécouter · R : recommencer · Échap : retour · F11 : plein écran")).small().color(MUTED));
         });
 
+        self.hover_block = hover_block;
         if let Some(k) = &end {
             if k != "sad" { paint_celebration(ui, ui.max_rect(), age, k == "secret"); }
         }

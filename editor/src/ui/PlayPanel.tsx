@@ -18,6 +18,8 @@ export function PlayPanel() {
   const engine = useRef<Engine | null>(null);
   const sounds = useRef(new Map<string, Sound | null>());
   const token = useRef(0);
+  // La souris reste où l'on a cliqué : la réponse qui apparaît dessous ne doit pas couper la lecture de la page.
+  const hoverBlocked = useRef(false);
   const [, force] = useReducer((x: number) => x + 1, 0);
   const [preparing, setPreparing] = useState(false);
   const advanced = project.level === 'avance';
@@ -26,22 +28,19 @@ export function PlayPanel() {
     const e = engine.current;
     if (!e) return;
     const t = ++token.current;
+    hoverBlocked.current = true;
     const n = e.node;
     useStore.getState().setPlaying(n?.id ?? null, [...e.path]);
     force();
     stop();
     if (!n || !('audio' in n)) return;
-    const onEnd = () => {
-      if (t !== token.current || n.type !== 'scene') return;
-      e.next();
-      present();
-    };
-    if (n.audio) { playSound(sounds.current.get(n.audio) ?? null, 'play', onEnd); return; }
+    // Comme les lecteurs : on ne change jamais de page tout seul.
+    if (n.audio) { playSound(sounds.current.get(n.audio) ?? null, 'play'); return; }
     // Voix automatique : le texte est lu par la synthèse vocale.
     const text = n.text || n.title;
     if (!useStore.getState().project.autoVoice || !text) return;
     setPreparing(true);
-    autoSound(text).then((s) => { if (t === token.current) playSound(s, 'play', onEnd); }).catch(console.error).finally(() => setPreparing(false));
+    autoSound(text).then((s) => { if (t === token.current) playSound(s, 'play'); }).catch(console.error).finally(() => setPreparing(false));
   };
 
   const hearOption = (o: { audio?: string | null; text: string }) => {
@@ -85,7 +84,8 @@ export function PlayPanel() {
   const end = n?.type === 'end' ? END_KINDS.find((k) => k.kind === n.kind) : null;
 
   return (
-    <section className="play" style={{ borderTopColor: project.color }}>
+    <section className="play" style={{ borderTopColor: project.color }}
+      onMouseMove={(ev) => { if (!(ev.target as HTMLElement).closest('.choice-btn')) hoverBlocked.current = false; }}>
       <div className="play-main">
         {e.status === 'error' && <div className="play-card error-card"><h2>🌀 {t('Boucle infinie !')}</h2><p>{t('Des blocs se renvoient l’un à l’autre sans jamais s’arrêter sur une scène ou un choix.')}</p></div>}
         {e.status === 'end' && !n && <div className="play-card"><h2>🛑 {t('L’histoire s’arrête ici')}</h2><p>{t('Aucun bloc n’est relié après celui-ci.')}</p></div>}
@@ -103,7 +103,7 @@ export function PlayPanel() {
         <div className="play-actions">
           {n?.type === 'choice' && n.options.map((o, i) => (
             <button key={i} className="btn choice-btn" onClick={() => choose(i)}
-              onMouseEnter={() => hearOption(o)} onFocus={() => hearOption(o)}>
+              onMouseEnter={() => { if (!hoverBlocked.current) hearOption(o); }} onFocus={() => hearOption(o)}>
               <span className="option-num">{i + 1}</span> {o.text}
             </button>
           ))}

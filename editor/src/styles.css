@@ -79,9 +79,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 6px rgba(229, 72, 77, 0.25); } }
 
 /* ---------- Panneaux ---------- */
-.left, .right { background: var(--panel); overflow-y: auto; }
-.left { grid-area: left; border-right: 2px solid var(--line); }
-.right { grid-area: right; border-left: 2px solid var(--line); }
+aside.left, aside.right { background: var(--panel); overflow-y: auto; }
+aside.left { grid-area: left; border-right: 2px solid var(--line); }
+aside.right { grid-area: right; border-left: 2px solid var(--line); }
 .center { grid-area: center; position: relative; display: flex; flex-direction: column; min-width: 0; }
 
 .tabs { display: flex; padding: 8px 8px 0; gap: 4px; border-bottom: 2px solid var(--line); position: sticky; top: 0; background: var(--panel); z-index: 1; }
@@ -285,7 +285,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .fade { position: absolute; top: 0; bottom: 0; pointer-events: none; }
 .fade.in { left: 0; background: linear-gradient(to bottom right, rgba(38, 35, 58, 0.25) 50%, transparent 50%); }
 .fade.out { right: 0; background: linear-gradient(to bottom left, rgba(38, 35, 58, 0.25) 50%, transparent 50%); }
-.selection { position: absolute; top: 0; bottom: 0; background: rgba(91, 91, 214, 0.22); border-left: 2px solid var(--accent); border-right: 2px solid var(--accent); pointer-events: none; }
+.clip-selection { position: absolute; top: 0; bottom: 0; background: rgba(91, 91, 214, 0.22); border-left: 2px solid var(--accent); border-right: 2px solid var(--accent); pointer-events: none; }
 .cursor, .playhead { position: absolute; top: 0; bottom: 0; width: 2px; pointer-events: none; }
 .cursor { background: var(--ink); opacity: 0.5; }
 .playhead { background: #e5484d; }

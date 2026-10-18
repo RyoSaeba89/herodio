@@ -6,7 +6,7 @@ Herodio lets a child (roughly 7 to 14 years old), a teacher or a youth leader **
 
 Everything works **offline**, with no account and no subscription.
 
-> **Version 0.2.3-alpha**: a test version, in French and English. The Studio and the PC and Android players are tested; a real Raspberry Pi has not been tried on the device yet; first tries on a real Xperia Play and a smartphone led to the Android fixes in 0.2.2, to be checked again on the device (see [Project status](#project-status)).
+> **Version 0.3.0-beta**: first beta version, in French and English. The Studio and the PC and Android players are tested; a real Raspberry Pi has not been tried on the device yet; first tries on a real Xperia Play and a smartphone led to the Android fixes in 0.2.2, to be checked again on the device (see [Project status](#project-status)).
 
 ## Preview
 
@@ -33,6 +33,7 @@ All the files are on the [Releases](https://github.com/RyoSaeba89/herodio/releas
 | File | What it is for |
 |---|---|
 | `herodio-studio-…-windows-portable.exe` | **Herodio Studio**, the editor: a single file to run, nothing to install (Windows 10/11, WebView2). French and English voices, 8 stories in each language. |
+| `herodio-studio-…-windows-setup.exe` | The same Studio as an installer, with Microsoft's WebView2 engine included: installs without Internet on a Windows 10 that does not have it yet (Windows 11 already does). |
 | `herodio-player-…-windows.exe` | Player for Windows PCs |
 | `herodio-player-…-linux-x64.tar.gz` | Player for Linux PCs |
 | `herodio-player-…-raspberry-pi-arm64.tar.gz` | Player for Raspberry Pi 3, 4, 5 or Zero 2 (64-bit Raspberry Pi OS), with the autostart files |
@@ -85,9 +86,9 @@ This table separates what is written, built and tested:
 
 | Component | Implemented | Built | Tested |
 |---|---|---|---|
-| Editor (Windows, Tauri) | ✅ | ✅ portable exe + NSIS installer | ✅ 84 unit tests (including translation coverage and the 16 stories), end-to-end tests in Edge (creating, logic, studio, export, save/reopen, language choice), exe start-up checked; ⚠️ microphone recording not tested automatically |
+| Editor (Windows, Tauri) | ✅ | ✅ portable exe + NSIS installer (offline WebView2 included) | ✅ 84 unit tests (including translation coverage and the 16 stories), end-to-end tests in Edge (creating, logic, studio, export, save/reopen, language choice, alpha feedback), exe start-up checked; ⚠️ microphone recording not tested automatically |
 | TypeScript engine (reference) | ✅ | ✅ | ✅ conformance |
-| Windows player (Rust) | ✅ | ✅ | ✅ conformance, full automated play-through, window rendering checked by screenshot; ⚠️ sound and keyboard not tried by hand |
+| Windows player (Rust) | ✅ | ✅ | ✅ conformance, full automated play-through, window rendering checked by screenshot; ⚠️ sound, keyboard and mouse hover not tried by hand |
 | Linux / Raspberry Pi player (Rust) | ✅ | ✅ x86_64 Linux (WSL) and aarch64 (cross-compiled) | ✅ tests on Linux x86_64 and under aarch64 emulation (qemu), console mode played on the 8 exported stories; **to be checked on a real Raspberry Pi** |
 | Android 2.3 → 14 player (Java) | ✅ | ✅ APK signed v1+v2, built against API 9 | ✅ Android 2.3.7, 5.1 and 14 emulators (import, WAV playback, pictures, D-pad, keyboard, touch, complete stories, confetti, rotation, listen again); first tries on a real Xperia Play and a smartphone, **0.2.2 fixes to be checked again on the device** |
 | Automatic voice (Piper: Siwis and LJ Speech, in the editor) | ✅ | ✅ | ✅ synthesis, cache, preview, takes and export tested in Edge; 8 s of speech computed in about 2 s; English narration of the stories generated with LJ Speech |

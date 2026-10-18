@@ -123,12 +123,12 @@ public final class Session implements MediaPlayer.OnCompletionListener {
         try { return player != null && player.isPlaying(); } catch (IllegalStateException e) { return false; }
     }
 
+    /** Fin d'un son : lit la réponse suivante. On ne change jamais de page tout seul. */
     public void onCompletion(MediaPlayer mp) {
         if (mp != player) return;
         int k = reading;
         stopSound();
         reading = -1;
-        if (k >= 0 && "scene".equals(engine.node.type)) { next(); return; }
         if (k >= 0 && chain) readFrom(k + 1);
         listener.onChange();
     }

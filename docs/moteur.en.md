@@ -45,7 +45,7 @@ The player can only do the following:
 - `choose(i)`: on a choice, enter the target of answer `i`. No effect if `i` is out of range.
 - `start()`: start again.
 
-The players move on from a scene automatically when its sound ends. A scene without a sound waits for the player to press "Next".
+The players never turn the page on their own: when a scene's sound ends, they wait for the player to press "Next".
 
 ## Conformance tests
 

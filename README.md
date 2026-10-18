@@ -6,7 +6,7 @@ Herodio permet à un enfant (de 7 à 14 ans environ), à un enseignant ou à un 
 
 Tout fonctionne **hors ligne**, sans compte et sans abonnement.
 
-> **Version 0.2.3-alpha** : version d'essai, en français et en anglais. Le Studio et les lecteurs PC et Android sont testés ; le vrai Raspberry Pi n'a pas encore été essayé sur l'appareil ; les premiers essais sur un vrai Xperia Play et un smartphone ont mené aux correctifs Android de la 0.2.2, à revalider sur l'appareil (voir [État du projet](#état-du-projet)).
+> **Version 0.3.0-beta** : première version bêta, en français et en anglais. Le Studio et les lecteurs PC et Android sont testés ; le vrai Raspberry Pi n'a pas encore été essayé sur l'appareil ; les premiers essais sur un vrai Xperia Play et un smartphone ont mené aux correctifs Android de la 0.2.2, à revalider sur l'appareil (voir [État du projet](#état-du-projet)).
 
 ## Aperçu
 
@@ -33,6 +33,7 @@ Tous les fichiers sont sur la page [Releases](https://github.com/RyoSaeba89/hero
 | Fichier | Pour quoi faire |
 |---|---|
 | `herodio-studio-…-windows-portable.exe` | **Herodio Studio**, l'éditeur : un seul fichier à lancer, sans installation (Windows 10/11, WebView2). Voix française et anglaise, 8 histoires dans chaque langue. |
+| `herodio-studio-…-windows-setup.exe` | Le même Studio en installateur, avec le moteur WebView2 de Microsoft inclus : il s'installe sans Internet sur un Windows 10 qui ne l'a pas encore (Windows 11 l'a déjà). |
 | `herodio-player-…-windows.exe` | Lecteur pour PC Windows |
 | `herodio-player-…-linux-x64.tar.gz` | Lecteur pour PC Linux |
 | `herodio-player-…-raspberry-pi-arm64.tar.gz` | Lecteur pour Raspberry Pi 3, 4, 5 ou Zero 2 (Raspberry Pi OS 64 bits), avec les fichiers de démarrage automatique |
@@ -85,9 +86,9 @@ Ce tableau distingue ce qui est écrit, compilé et testé :
 
 | Composant | Implémenté | Compilé | Testé |
 |---|---|---|---|
-| Éditeur (Windows, Tauri) | ✅ | ✅ exe portable + installateur NSIS | ✅ 84 tests unitaires (dont la couverture des traductions et les 16 histoires), tests de bout en bout dans Edge (création, logique, studio, export, enregistrement/réouverture, choix de la langue), démarrage de l'exe vérifié ; ⚠️ enregistrement au micro non testé automatiquement |
+| Éditeur (Windows, Tauri) | ✅ | ✅ exe portable + installateur NSIS (WebView2 hors ligne inclus) | ✅ 84 tests unitaires (dont la couverture des traductions et les 16 histoires), tests de bout en bout dans Edge (création, logique, studio, export, enregistrement/réouverture, choix de la langue, retours de l'alpha), démarrage de l'exe vérifié ; ⚠️ enregistrement au micro non testé automatiquement |
 | Moteur TypeScript (référence) | ✅ | ✅ | ✅ conformité |
-| Lecteur Windows (Rust) | ✅ | ✅ | ✅ conformité, partie complète automatisée, rendu de la fenêtre vérifié par capture ; ⚠️ son et clavier non essayés à la main |
+| Lecteur Windows (Rust) | ✅ | ✅ | ✅ conformité, partie complète automatisée, rendu de la fenêtre vérifié par capture ; ⚠️ son, clavier et survol à la souris non essayés à la main |
 | Lecteur Linux / Raspberry Pi (Rust) | ✅ | ✅ x86_64 Linux (WSL) et aarch64 (compilation croisée) | ✅ tests sur Linux x86_64 et sous émulation aarch64 (qemu), mode console joué sur les 8 histoires exportées ; **à valider sur un vrai Raspberry Pi** |
 | Lecteur Android 2.3 → 14 (Java) | ✅ | ✅ APK signé v1+v2, compilé contre l'API 9 | ✅ émulateurs Android 2.3.7, 5.1 et 14 (import, lecture WAV, illustrations, D-pad, clavier, toucher, histoires complètes, confettis, rotation, réécoute) ; premiers essais sur un vrai Xperia Play et un smartphone, **correctifs de la 0.2.2 à revalider sur l'appareil** |
 | Voix automatique (Piper : Siwis et LJ Speech, dans l'éditeur) | ✅ | ✅ | ✅ synthèse, cache, prévisualisation, prises et export testés dans Edge ; 8 s de parole calculées en 2 s environ ; narration anglaise des histoires générée avec LJ Speech |

@@ -45,7 +45,7 @@ Le joueur ne peut faire que les actions suivantes :
 - `choose(i)` : sur un choix, entrer dans la cible de la réponse `i`. Sans effet si `i` est hors limites.
 - `start()` : recommencer.
 
-Les lecteurs passent à la suite d'une scène automatiquement à la fin de son son. Une scène sans son attend que le joueur appuie sur « Suivant ».
+Les lecteurs ne changent jamais de page tout seuls : à la fin du son d'une scène, ils attendent que le joueur appuie sur « Suivant ».
 
 ## Tests de conformité
 

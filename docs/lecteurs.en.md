@@ -11,7 +11,7 @@ In Herodio Studio, click **📦 Export my story** and choose the device. Every p
 - **Portable version**: `herodio-player.exe` with a `histoires` folder next to it. Copy the `.aistory` files into that folder; nothing is installed on the PC.
 - Without a `histoires` folder next to the program, the library is `%USERPROFILE%\Herodio\histoires`.
 - The chosen language is kept in `langue.txt`, in the library folder.
-- At each step, the text and then each answer are read one after the other, and what is being read is highlighted; as soon as you pick an answer yourself, the chained reading stops. The window adapts to its size (everything grows or shrinks with it).
+- At each step, the text and then each answer are read one after the other, and what is being read is highlighted; as soon as you pick an answer yourself, the chained reading stops. The player never turns the page on its own: you press "Next". The window adapts to its size (everything grows or shrinks with it).
 - You can also **drop a `.aistory` file into the window** (it is copied into the library) or pass it as an argument (`herodio-player.exe story.aistory`, or "Open with…").
 
 | Key | Action |

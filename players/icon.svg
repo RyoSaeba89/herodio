@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Icône des lecteurs (PC et Android) : livre ouvert et casque, sur fond orange pour la distinguer du Studio. -->
+  <rect x="32" y="32" width="960" height="960" rx="220" fill="#f28a1c"/>
+  <path d="M250 560 V470 a262 262 0 0 1 524 0 V560" fill="none" stroke="#fff" stroke-width="64" stroke-linecap="round"/>
+  <rect x="186" y="430" width="128" height="210" rx="56" fill="#5b5bd6"/>
+  <rect x="710" y="430" width="128" height="210" rx="56" fill="#14b0a6"/>
+  <path d="M512 590 C430 540 300 535 196 565 V820 C300 790 430 795 512 845 Z" fill="#fff"/>
+  <path d="M512 590 C594 540 724 535 828 565 V820 C724 790 594 795 512 845 Z" fill="#fff3e3"/>
+  <path d="M512 590 V845" stroke="#e07a10" stroke-width="10"/>
+  <path d="M470 650 L580 715 L470 780 Z" fill="#5b5bd6" stroke="#5b5bd6" stroke-width="24" stroke-linejoin="round"/>
+</svg>
